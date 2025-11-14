@@ -80,48 +80,19 @@ const COMP_ESP = [
   "5.1 Dirigir y controlar la implementación, operación y mantenimiento de sistemas de información, sistemas de comunicación de datos, software, seguridad informática y calidad de software.",
 ];
 
-function nuevaPropuesta(id: number): Propuesta {
-  return {
-    id,
-    asignatura: "",
-    nombreAsignatura: "",
-    anio: "",
-    regimen: "",
-    horasSemanales: "",
-  horasTotales: "",
-  correlativasRegularizadasIds: [],
-  correlativasAprobadasIds: [],
-  competenciasGenericas: [],
-    competenciasEspecificas: [],
-    objetivos: "",
-    contenidosMinimos: "",
-    formacionPractica: "",
-    horasFormacionPractica: "",
-    comentarios: "",
-  };
-}
 
-function nuevaOptativa(id: number): Optativa {
-  return {
-    id,
-    asignatura: "",
-    objetivos: "",
-    contenidosMinimos: "",
-    formacionPractica: "",
-  };
-}
 
 export default function Home() {
   const router = useRouter();
-  const [nombre, setNombre] = useState("");
-  const [apellido, setApellido] = useState("");
+  
   const [propuestas, setPropuestas] = useState<Propuesta[]>([]);
   const [optativas, setOptativas] = useState<Optativa[]>([]);
   const [aportes, setAportes] = useState<Aporte[]>([]);
   const [asignaturas, setAsignaturas] = useState<AsignaturaDB[]>([]);
   const [errores, setErrores] = useState<{ docente: { nombre?: string; apellido?: string }; propuestas: Record<number, { asignatura?: string; competenciasGenericas?: string; competenciasEspecificas?: string }>; optativas: Record<number, { asignatura?: string }>; aportes: Record<number, { detalle?: string }> }>({ docente: {}, propuestas: {}, optativas: {}, aportes: {} });
-  const [enviando, setEnviando] = useState(false);
+  
   const [cargandoAsignaturas, setCargandoAsignaturas] = useState<Record<number, boolean>>({});
+  
 
   useEffect(() => {
     const fetchAsignaturas = async () => {
@@ -195,9 +166,6 @@ export default function Home() {
     });
   };
 
-  const agregarPropuesta = () => {
-    setPropuestas((prev) => [...prev, nuevaPropuesta(prev.length + 1)]);
-  };
 
   const eliminarPropuesta = (id: number) => {
     setPropuestas((prev) => prev.filter((p) => p.id !== id));
@@ -209,9 +177,6 @@ export default function Home() {
     );
   };
 
-  const agregarOptativa = () => {
-    setOptativas((prev) => [...prev, nuevaOptativa(prev.length + 1)]);
-  };
 
   const eliminarOptativa = (id: number) => {
     setOptativas((prev) => prev.filter((p) => p.id !== id));
@@ -221,9 +186,7 @@ export default function Home() {
     setOptativas((prev) => prev.map((p) => (p.id === id ? { ...p, [campo]: valor } : p)));
   };
 
-  const agregarAporte = () => {
-    setAportes((prev) => [...prev, { id: prev.length + 1, tema: "", detalle: "" }]);
-  };
+  
 
   const eliminarAporte = (id: number) => {
     setAportes((prev) => prev.filter((p) => p.id !== id));
@@ -233,128 +196,7 @@ export default function Home() {
     setAportes((prev) => prev.map((p) => (p.id === id ? { ...p, [campo]: valor } : p)));
   };
 
-  const enviarTodo = async () => {
-    const nuevosErrores: typeof errores = { docente: {}, propuestas: {}, optativas: {}, aportes: {} };
-    if (!nombre.trim()) nuevosErrores.docente.nombre = "Nombre requerido";
-    if (!apellido.trim()) nuevosErrores.docente.apellido = "Apellido requerido";
-    for (const p of propuestas) {
-      const e: { asignatura?: string; competenciasGenericas?: string; competenciasEspecificas?: string } = {};
-      if (!p.asignatura.trim()) e.asignatura = "Seleccione una asignatura";
-      if ((p.competenciasGenericas?.length ?? 0) === 0) e.competenciasGenericas = "Seleccione al menos una competencia genérica";
-      if ((p.competenciasEspecificas?.length ?? 0) === 0) e.competenciasEspecificas = "Seleccione al menos una competencia específica";
-      if (Object.keys(e).length) nuevosErrores.propuestas[p.id] = e;
-    }
-    for (const o of optativas) {
-      if (!o.asignatura.trim()) nuevosErrores.optativas[o.id] = { asignatura: "Ingrese la asignatura optativa" };
-    }
-    for (const a of aportes) {
-      if (!a.detalle.trim()) nuevosErrores.aportes[a.id] = { detalle: "Detalle requerido" };
-    }
-    const hayErrores = Boolean(nuevosErrores.docente.nombre || nuevosErrores.docente.apellido || Object.keys(nuevosErrores.propuestas).length || Object.keys(nuevosErrores.optativas).length || Object.keys(nuevosErrores.aportes).length);
-    if (hayErrores) {
-      setErrores(nuevosErrores);
-      window.scrollTo({ top: 0, behavior: "smooth" });
-      return;
-    }
-    setEnviando(true);
-    const supabase = getSupabaseAnon();
-    const erroresEnvio: string[] = [];
-    const { data: docenteRow, error: docenteErr } = await supabase
-      .from("docentes")
-      .insert({ nombre, apellido })
-      .select()
-      .single();
-    if (docenteErr) {
-      alert(docenteErr.message);
-      setEnviando(false);
-      return;
-    }
-    const docenteId = (docenteRow as { id: number }).id;
-
-    const getAsignaturaId = async (nombreA: string) => {
-      const n = (nombreA || "").trim();
-      if (!n) return null;
-      const { data: found } = await supabase
-        .from("asignaturas")
-        .select("id")
-        .eq("nombre", n)
-        .single();
-      if (found?.id) return found.id as number;
-      const { data: inserted } = await supabase
-        .from("asignaturas")
-        .insert({ nombre: n })
-        .select()
-        .single();
-      return (inserted as { id: number } | null)?.id ?? null;
-    };
-
-    for (const p of propuestas) {
-      const asignaturaId = await getAsignaturaId(p.asignatura);
-      const { data: propuestaRow, error: propuestaErr } = await supabase.from("propuestas_plan").insert({
-        docente_id: docenteId,
-        asignatura_id: asignaturaId,
-        nombre_asignatura: p.nombreAsignatura || null,
-        anio: p.anio || null,
-        regimen: p.regimen || null,
-        horas_semanales: p.horasSemanales || null,
-        horas_totales: p.horasTotales || null,
-        competencias_genericas: p.competenciasGenericas ?? [],
-        competencias_especificas: p.competenciasEspecificas ?? [],
-        objetivos: p.objetivos || null,
-        contenidos_minimos: p.contenidosMinimos || null,
-        formacion_practica: p.formacionPractica || null,
-        horas_formacion_practica: p.horasFormacionPractica || null,
-        comentarios: p.comentarios || null,
-      }).select().single();
-      if (propuestaErr) {
-        erroresEnvio.push(`Propuesta plan #${p.id}: ${propuestaErr.message}`);
-        continue;
-      }
-      const propuestaId = (propuestaRow as { id: number } | null)?.id ?? null;
-      if (propuestaId) {
-        for (const corrId of p.correlativasRegularizadasIds) {
-          await supabase.from("propuestas_plan_correlativas_regularizadas").insert({ propuesta_plan_id: propuestaId, correlativa_id: corrId });
-        }
-        for (const corrId of p.correlativasAprobadasIds) {
-          await supabase.from("propuestas_plan_correlativas_aprobadas").insert({ propuesta_plan_id: propuestaId, correlativa_id: corrId });
-        }
-      }
-    }
-
-    for (const o of optativas) {
-      const { error: optErr } = await supabase.from("propuestas_optativas").insert({
-        docente_id: docenteId,
-        asignatura: o.asignatura || null,
-        objetivos: o.objetivos || null,
-        contenidos_minimos: o.contenidosMinimos || null,
-        formacion_practica: o.formacionPractica || null,
-      });
-      if (optErr) erroresEnvio.push(`Optativa #${o.id}: ${optErr.message}`);
-    }
-
-    for (const a of aportes) {
-      const { error: apErr } = await supabase.from("aportes_generales").insert({
-        docente_id: docenteId,
-        tema: a.tema || null,
-        detalle: a.detalle || null,
-      });
-      if (apErr) erroresEnvio.push(`Aporte #${a.id}: ${apErr.message}`);
-    }
-    setEnviando(false);
-    if (erroresEnvio.length) {
-      alert(erroresEnvio.join("\n"));
-      return;
-    }
-    const d = `${nombre} ${apellido}`.trim();
-    setNombre("");
-    setApellido("");
-    setPropuestas([]);
-    setOptativas([]);
-    setAportes([]);
-    setErrores({ docente: {}, propuestas: {}, optativas: {}, aportes: {} });
-    setCargandoAsignaturas({});
-    router.push(`/gracias?docente=${encodeURIComponent(d)}`);
-  };
+  
 
   const toggleCheck = (id: number, campo: "competenciasGenericas" | "competenciasEspecificas", item: string) => {
     setPropuestas((prev) =>
@@ -370,35 +212,16 @@ export default function Home() {
 
   return (
     <div className="min-h-screen w-full bg-zinc-100">
-      {enviando && (
-        <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/40">
-          <div className="rounded-xl bg-white px-6 py-4 text-center shadow">
-            <div className="mx-auto mb-2 h-6 w-6 animate-spin rounded-full border-2 border-blue-600 border-t-transparent" />
-            <p className="text-sm text-zinc-800">Enviando propuestas...</p>
-          </div>
-        </div>
-      )}
+      
+      
       <div className="mx-auto max-w-5xl px-4 py-10">
         <section className="rounded-2xl bg-blue-700 p-8 text-white shadow">
           <h1 className="text-2xl font-semibold">Formulario de Propuestas - Plan de Estudios 2026</h1>
           <p className="mt-2 text-sm">Ingeniería en Informática - Facultad de Tecnología y Ciencias Aplicadas - UNCA</p>
         </section>
+        
 
-        <section className="mt-6 rounded-xl bg-white p-6 text-zinc-900 shadow">
-          <h2 className="text-xl font-semibold">Datos del Docente</h2>
-          <div className="mt-4 grid grid-cols-1 gap-4 sm:grid-cols-2">
-            <div>
-              <label className="mb-1 block text-sm font-medium">Nombre/s *</label>
-              <input className="w-full rounded-md border border-zinc-300 bg-white px-3 py-2 text-sm text-zinc-900 placeholder:text-zinc-500 outline-none focus:ring-2 focus:ring-blue-600" placeholder="Ingrese su/s nombre/s" value={nombre} onChange={(e) => { setNombre(e.target.value); setErrores((prev) => ({ ...prev, docente: { ...prev.docente, nombre: undefined } })); }} />
-              {errores.docente.nombre && <p className="mt-1 text-xs text-red-600">{errores.docente.nombre}</p>}
-            </div>
-            <div>
-              <label className="mb-1 block text-sm font-medium">Apellido/s *</label>
-              <input className="w-full rounded-md border border-zinc-300 bg-white px-3 py-2 text-sm text-zinc-900 placeholder:text-zinc-500 outline-none focus:ring-2 focus:ring-blue-600" placeholder="Ingrese su/s apellido/s" value={apellido} onChange={(e) => { setApellido(e.target.value); setErrores((prev) => ({ ...prev, docente: { ...prev.docente, apellido: undefined } })); }} />
-              {errores.docente.apellido && <p className="mt-1 text-xs text-red-600">{errores.docente.apellido}</p>}
-            </div>
-          </div>
-        </section>
+        
 
         <section className="mt-6 rounded-xl bg-white p-6 text-zinc-900 shadow">
           <h2 className="text-xl font-semibold">1. Plan de Estudio y Programas Sintéticos</h2>
@@ -409,9 +232,7 @@ export default function Home() {
           </div>
 
           <div className="mt-6 space-y-6">
-            {propuestas.length === 0 && (
-              <p className="text-center text-sm text-zinc-600">No hay propuestas agregadas. Haga clic en Agregar Propuesta para comenzar.</p>
-            )}
+            {propuestas.length === 0 && null}
 
             {propuestas.map((p, idx) => (
               <div key={p.id} className="rounded-xl border border-zinc-200 bg-zinc-50 p-4">
@@ -428,7 +249,7 @@ export default function Home() {
                       {asignaturas.map((a) => (
                         <option key={a.id} value={a.nombre}>{a.nombre}</option>
                       ))}
-                </select>
+                    </select>
                     {cargandoAsignaturas[p.id] && (
                       <div className="mt-2 flex items-center gap-2 rounded-md border border-blue-300 bg-blue-50 px-3 py-2 text-xs text-blue-700" aria-live="polite">
                         <svg className="h-4 w-4 animate-spin text-blue-600" viewBox="0 0 24 24" fill="none" aria-hidden="true">
@@ -439,8 +260,12 @@ export default function Home() {
                       </div>
                     )}
                     {errores.propuestas[p.id]?.asignatura && <p className="mt-1 text-xs text-red-600">{errores.propuestas[p.id]?.asignatura}</p>}
-              </div>
-
+                    {!p.asignatura.trim() && (
+                      <p className="mt-2 text-xs text-zinc-600">Seleccione una asignatura para continuar con los campos de la propuesta.</p>
+                    )}
+                  </div>
+                  {p.asignatura.trim() && (
+                  <>
                   <div className="text-zinc-900">
                     <label className="mb-1 block text-sm font-medium">Nombre de la Asignatura</label>
                     <input className="w-full rounded-md border border-zinc-300 bg-white px-3 py-2 text-sm text-zinc-900 placeholder:text-zinc-500 outline-none focus:ring-2 focus:ring-blue-600" placeholder="Ingrese un nuevo nombre si propone cambiarlo" value={p.nombreAsignatura} onChange={(e) => actualizarCampo(p.id, "nombreAsignatura", e.target.value)} />
@@ -590,10 +415,13 @@ export default function Home() {
                     <label className="mb-1 block text-sm font-medium">Comentarios</label>
                     <textarea className="min-h-24 w-full rounded-md border border-zinc-300 bg-white px-3 py-2 text-sm text-zinc-900 placeholder:text-zinc-500 outline-none focus:ring-2 focus:ring-blue-600" placeholder="Agregue comentarios adicionales sobre esta propuesta" value={p.comentarios} onChange={(e) => actualizarCampo(p.id, "comentarios", e.target.value)} />
                   </div>
+                  </>
+                  )}
                 </div>
 
                 <div className="mt-4">
-                  <button className="rounded-md bg-green-600 px-4 py-2 text-sm font-medium text-white hover:bg-green-700" onClick={agregarPropuesta}>Agregar Propuesta</button>
+                  <button className="rounded-md bg-blue-600 px-4 py-2 text-sm font-medium text-white hover:bg-blue-700" onClick={() => router.push("/propuesta/nueva")}>Comenzar propuesta</button>
+                  <p className="mt-2 text-xs text-zinc-600">Ir al formulario individual de propuesta.</p>
                 </div>
               </div>
             ))}
@@ -601,7 +429,7 @@ export default function Home() {
 
           {propuestas.length === 0 && (
             <div className="mt-6">
-              <button className="rounded-md bg-green-600 px-4 py-2 text-sm font-medium text-white hover:bg-green-700" onClick={agregarPropuesta}>Agregar Propuesta</button>
+              <button className="rounded-md bg-blue-600 px-4 py-2 text-sm font-medium text-white hover:bg-blue-700" onClick={() => router.push("/propuesta/nueva")}>Iniciar propuesta</button>
             </div>
           )}
         </section>
@@ -615,9 +443,7 @@ export default function Home() {
           </div>
 
           <div className="mt-6 space-y-6">
-            {optativas.length === 0 && (
-              <p className="text-center text-sm text-zinc-600">No hay propuestas agregadas. Haga clic en Agregar Propuesta para comenzar.</p>
-            )}
+            {optativas.length === 0 && null}
 
             {optativas.map((o, idx) => (
               <div key={o.id} className="rounded-xl border border-zinc-200 bg-zinc-50 p-4">
@@ -650,7 +476,7 @@ export default function Home() {
                 </div>
 
                 <div className="mt-4">
-                  <button className="rounded-md bg-green-600 px-4 py-2 text-sm font-medium text-white hover:bg-green-700" onClick={agregarOptativa}>Agregar Propuesta</button>
+                  <button className="rounded-md bg-blue-600 px-4 py-2 text-sm font-medium text-white hover:bg-blue-700" onClick={() => router.push("/optativa/nueva")}>Iniciar propuesta</button>
                 </div>
               </div>
             ))}
@@ -658,7 +484,7 @@ export default function Home() {
 
           {optativas.length === 0 && (
             <div className="mt-6">
-              <button className="rounded-md bg-green-600 px-4 py-2 text-sm font-medium text-white hover:bg-green-700" onClick={agregarOptativa}>Agregar Propuesta</button>
+              <button className="rounded-md bg-blue-600 px-4 py-2 text-sm font-medium text-white hover:bg-blue-700" onClick={() => router.push("/optativa/nueva")}>Iniciar propuesta</button>
             </div>
           )}
         </section>
@@ -669,9 +495,7 @@ export default function Home() {
           <hr className="my-4 border-zinc-200" />
 
           <div className="mt-6 space-y-6">
-            {aportes.length === 0 && (
-              <p className="text-center text-sm text-zinc-600">No hay propuestas agregadas. Haga clic en Agregar Propuesta para comenzar.</p>
-            )}
+            {aportes.length === 0 && null}
 
             {aportes.map((a, idx) => (
               <div key={a.id} className="rounded-xl border border-zinc-200 bg-zinc-50 p-4">
@@ -694,7 +518,7 @@ export default function Home() {
                 </div>
 
                 <div className="mt-4">
-                  <button className="rounded-md bg-green-600 px-4 py-2 text-sm font-medium text-white hover:bg-green-700" onClick={agregarAporte}>Agregar Propuesta</button>
+                  <button className="rounded-md bg-blue-600 px-4 py-2 text-sm font-medium text-white hover:bg-blue-700" onClick={() => router.push("/aporte/nueva")}>Iniciar propuesta</button>
                 </div>
               </div>
             ))}
@@ -702,24 +526,12 @@ export default function Home() {
 
           {aportes.length === 0 && (
             <div className="mt-6">
-              <button className="rounded-md bg-green-600 px-4 py-2 text-sm font-medium text-white hover:bg-green-700" onClick={agregarAporte}>Agregar Propuesta</button>
+              <button className="rounded-md bg-blue-600 px-4 py-2 text-sm font-medium text-white hover:bg-blue-700" onClick={() => router.push("/aporte/nueva")}>Iniciar propuesta</button>
             </div>
           )}
         </section>
       </div>
-      <div className="mx-auto max-w-5xl px-4 pb-12">
-        <hr className="my-6 border-zinc-200" />
-        <div className="flex justify-center">
-          <button
-            type="button"
-            onClick={enviarTodo}
-            className="rounded-md bg-green-600 px-6 py-3 text-sm font-semibold text-white hover:bg-green-700 disabled:cursor-not-allowed disabled:opacity-50"
-            disabled={enviando || (propuestas.length === 0 && optativas.length === 0 && aportes.length === 0)}
-          >
-            {enviando ? "Enviando..." : "Enviar Todas las Propuestas"}
-          </button>
-        </div>
-      </div>
+      
     </div>
   );
 }
