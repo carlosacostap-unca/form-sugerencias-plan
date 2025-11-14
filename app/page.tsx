@@ -53,32 +53,8 @@ type AsignaturaDB = {
 
 const ANIOS = ["Seleccione...", "1º", "2º", "3º", "4º", "5º"];
 const REGIMENES = ["Seleccione...", "Anual", "1º Cuatr.", "2º Cuatr."];
-
-const COMP_TEC = [
-  "Identificar, formular y resolver problemas de ingeniería.",
-  "Concebir, diseñar y desarrollar proyectos de ingeniería.",
-  "Gestionar, planificar, ejecutar y controlar proyectos de ingeniería.",
-  "Utilizar de manera efectiva las técnicas y herramientas de aplicación en la ingeniería.",
-  "Contribuir a la generación de desarrollos tecnológicos y/o innovaciones tecnológicas.",
-];
-
-const COMP_SOC = [
-  "Desempeñarse de manera efectiva en equipos de trabajo.",
-  "Comunicarse con efectividad.",
-  "Actuar con ética, responsabilidad profesional y compromiso social, considerando el impacto económico, social y ambiental de su actividad en el contexto local y global.",
-  "Aprender en forma continua y autónoma.",
-  "Actuar con espíritu emprendedor.",
-];
-
-const COMP_ESP = [
-  "1.1 Especificar, proyectar y desarrollar sistemas de información.",
-  "1.2 Especificar, proyectar y desarrollar sistemas de comunicación de datos.",
-  "1.3 Especificar, proyectar y desarrollar software.",
-  "2.1 Proyectar y dirigir lo referido a seguridad informática.",
-  "3.1 Establecer métricas y normas de calidad de software.",
-  "4.1 Certificar el funcionamiento, condición de uso o estado de sistemas de información, sistemas de comunicación de datos, software, seguridad informática y calidad de software.",
-  "5.1 Dirigir y controlar la implementación, operación y mantenimiento de sistemas de información, sistemas de comunicación de datos, software, seguridad informática y calidad de software.",
-];
+type CompetenciaGenerica = { nombre: string; categoria: string | null; activo: boolean };
+type CompetenciaEspecifica = { nombre: string; activo: boolean };
 
 
 
@@ -92,6 +68,9 @@ export default function Home() {
   const [errores, setErrores] = useState<{ docente: { nombre?: string; apellido?: string }; propuestas: Record<number, { asignatura?: string; competenciasGenericas?: string; competenciasEspecificas?: string }>; optativas: Record<number, { asignatura?: string }>; aportes: Record<number, { detalle?: string }> }>({ docente: {}, propuestas: {}, optativas: {}, aportes: {} });
   
   const [cargandoAsignaturas, setCargandoAsignaturas] = useState<Record<number, boolean>>({});
+  const [compTec, setCompTec] = useState<string[]>([]);
+  const [compSoc, setCompSoc] = useState<string[]>([]);
+  const [compEsp, setCompEsp] = useState<string[]>([]);
   
 
   useEffect(() => {
@@ -105,7 +84,19 @@ export default function Home() {
         if (!error && data) setAsignaturas(data as AsignaturaDB[]);
       } catch {}
     };
+    const fetchCompetencias = async () => {
+      try {
+        const supabase = getSupabaseAnon();
+        const { data: gen } = await supabase.from("competencias_genericas").select("nombre,categoria,activo").eq("activo", true).order("nombre");
+        const items = (gen as CompetenciaGenerica[]) || [];
+        setCompTec(items.filter((x) => (x.categoria || "").toLowerCase() === "tecnologicas").map((x) => x.nombre));
+        setCompSoc(items.filter((x) => (x.categoria || "").toLowerCase() === "sociales").map((x) => x.nombre));
+        const { data: esp } = await supabase.from("competencias_especificas").select("nombre,activo").eq("activo", true).order("nombre");
+        setCompEsp(((esp as CompetenciaEspecifica[]) || []).map((x) => x.nombre));
+      } catch {}
+    };
     fetchAsignaturas();
+    fetchCompetencias();
   }, []);
 
   function normalizarAnio(v: string) {
@@ -354,7 +345,7 @@ export default function Home() {
                     <div className="mt-3">
                       <p className="text-sm font-semibold">Competencias tecnológicas</p>
                       <div className="mt-2 space-y-2">
-                        {COMP_TEC.map((c) => (
+                        {compTec.map((c) => (
                           <label key={c} className="flex items-start gap-2 text-sm">
                             <input type="checkbox" className="mt-1" checked={p.competenciasGenericas.includes(c)} onChange={() => { toggleCheck(p.id, "competenciasGenericas", c); setErrores((prev) => ({ ...prev, propuestas: { ...prev.propuestas, [p.id]: { ...(prev.propuestas[p.id] || {}), competenciasGenericas: undefined } } })); }} />
                             <span>{c}</span>
@@ -366,7 +357,7 @@ export default function Home() {
                     <div className="mt-4">
                       <p className="text-sm font-semibold">Competencias sociales, políticas y actitudinales</p>
                       <div className="mt-2 space-y-2">
-                        {COMP_SOC.map((c) => (
+                        {compSoc.map((c) => (
                           <label key={c} className="flex items-start gap-2 text-sm">
                             <input type="checkbox" className="mt-1" checked={p.competenciasGenericas.includes(c)} onChange={() => { toggleCheck(p.id, "competenciasGenericas", c); setErrores((prev) => ({ ...prev, propuestas: { ...prev.propuestas, [p.id]: { ...(prev.propuestas[p.id] || {}), competenciasGenericas: undefined } } })); }} />
                             <span>{c}</span>
@@ -381,7 +372,7 @@ export default function Home() {
                     <p className="text-sm font-medium">Competencias específicas (Libro Rojo)</p>
                     <p className="text-xs text-zinc-600">Seleccione al menos una opción</p>
                     <div className="mt-2 space-y-2">
-                      {COMP_ESP.map((c) => (
+                      {compEsp.map((c) => (
                         <label key={c} className="flex items-start gap-2 text-sm">
                           <input type="checkbox" className="mt-1" checked={p.competenciasEspecificas.includes(c)} onChange={() => { toggleCheck(p.id, "competenciasEspecificas", c); setErrores((prev) => ({ ...prev, propuestas: { ...prev.propuestas, [p.id]: { ...(prev.propuestas[p.id] || {}), competenciasEspecificas: undefined } } })); }} />
                           <span>{c}</span>

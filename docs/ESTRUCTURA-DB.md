@@ -10,6 +10,24 @@ CREATE TABLE public.aportes_generales (
   CONSTRAINT aportes_generales_pkey PRIMARY KEY (id),
   CONSTRAINT aportes_generales_docente_id_fkey FOREIGN KEY (docente_id) REFERENCES public.docentes(id)
 );
+CREATE TABLE public.asignatura_competencias_especificas (
+  id bigint GENERATED ALWAYS AS IDENTITY NOT NULL,
+  asignatura_id bigint NOT NULL,
+  competencia_especifica_id bigint NOT NULL,
+  created_at timestamp with time zone NOT NULL DEFAULT now(),
+  CONSTRAINT asignatura_competencias_especificas_pkey PRIMARY KEY (id),
+  CONSTRAINT asignatura_competencias_especificas_asignatura_id_fkey FOREIGN KEY (asignatura_id) REFERENCES public.asignaturas(id),
+  CONSTRAINT asignatura_competencias_especifi_competencia_especifica_id_fkey FOREIGN KEY (competencia_especifica_id) REFERENCES public.competencias_especificas(id)
+);
+CREATE TABLE public.asignatura_competencias_genericas (
+  id bigint GENERATED ALWAYS AS IDENTITY NOT NULL,
+  asignatura_id bigint NOT NULL,
+  competencia_generica_id bigint NOT NULL,
+  created_at timestamp with time zone NOT NULL DEFAULT now(),
+  CONSTRAINT asignatura_competencias_genericas_pkey PRIMARY KEY (id),
+  CONSTRAINT asignatura_competencias_genericas_asignatura_id_fkey FOREIGN KEY (asignatura_id) REFERENCES public.asignaturas(id),
+  CONSTRAINT asignatura_competencias_genericas_competencia_generica_id_fkey FOREIGN KEY (competencia_generica_id) REFERENCES public.competencias_genericas(id)
+);
 CREATE TABLE public.asignatura_correlativas_aprobadas (
   id bigint GENERATED ALWAYS AS IDENTITY NOT NULL,
   asignatura_id bigint NOT NULL,
@@ -41,6 +59,22 @@ CREATE TABLE public.asignaturas (
   formacion_practica text,
   horas_formacion_practica text,
   CONSTRAINT asignaturas_pkey PRIMARY KEY (id)
+);
+CREATE TABLE public.competencias_especificas (
+  id bigint GENERATED ALWAYS AS IDENTITY NOT NULL,
+  codigo text,
+  nombre USER-DEFINED NOT NULL UNIQUE,
+  activo boolean NOT NULL DEFAULT true,
+  created_at timestamp with time zone NOT NULL DEFAULT now(),
+  CONSTRAINT competencias_especificas_pkey PRIMARY KEY (id)
+);
+CREATE TABLE public.competencias_genericas (
+  id bigint GENERATED ALWAYS AS IDENTITY NOT NULL,
+  nombre USER-DEFINED NOT NULL UNIQUE,
+  categoria text CHECK (categoria = ANY (ARRAY['tecnologicas'::text, 'sociales'::text])),
+  activo boolean NOT NULL DEFAULT true,
+  created_at timestamp with time zone NOT NULL DEFAULT now(),
+  CONSTRAINT competencias_genericas_pkey PRIMARY KEY (id)
 );
 CREATE TABLE public.docentes (
   id bigint GENERATED ALWAYS AS IDENTITY NOT NULL,

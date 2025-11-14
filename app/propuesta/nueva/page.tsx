@@ -37,21 +37,8 @@ type AsignaturaDB = {
 const ANIOS = ["Seleccione...", "1º", "2º", "3º", "4º", "5º"];
 const REGIMENES = ["Seleccione...", "Anual", "1º Cuatr.", "2º Cuatr."];
 
-const COMP_TEC = [
-  "Identificar, formular y resolver problemas de ingeniería.",
-  "Diseñar y conducir experimentos, analizar e interpretar datos.",
-  "Diseñar sistemas, componentes o procesos para cumplir objetivos.",
-];
-const COMP_SOC = [
-  "Trabajar efectivamente en equipos multidisciplinarios.",
-  "Comprender responsabilidades profesionales y éticas.",
-  "Comunicar efectivamente.",
-];
-const COMP_ESP = [
-  "Seleccionar y utilizar técnicas, habilidades y herramientas.",
-  "Aplicar conocimientos de matemáticas, ciencias e ingeniería.",
-  "Gestionar proyectos de ingeniería.",
-];
+type CompetenciaGenerica = { nombre: string; categoria: string | null; activo: boolean };
+type CompetenciaEspecifica = { nombre: string; activo: boolean };
 
 function nuevaPropuesta(): Propuesta {
   return {
@@ -82,6 +69,9 @@ export default function NuevaPropuestaPage() {
   const [errores, setErrores] = useState<{ docente?: { nombre?: string; apellido?: string }; propuesta?: { asignatura?: string; competenciasGenericas?: string; competenciasEspecificas?: string } }>({});
   const [enviando, setEnviando] = useState(false);
   const [cargandoAsignatura, setCargandoAsignatura] = useState(false);
+  const [compTec, setCompTec] = useState<string[]>([]);
+  const [compSoc, setCompSoc] = useState<string[]>([]);
+  const [compEsp, setCompEsp] = useState<string[]>([]);
 
   useEffect(() => {
     const fetchAsignaturas = async () => {
@@ -91,7 +81,19 @@ export default function NuevaPropuestaPage() {
         setAsignaturas((data as AsignaturaDB[]) || []);
       } catch {}
     };
+    const fetchCompetencias = async () => {
+      try {
+        const supabase = getSupabaseAnon();
+        const { data: gen } = await supabase.from("competencias_genericas").select("nombre,categoria,activo").eq("activo", true).order("nombre");
+        const items = (gen as CompetenciaGenerica[]) || [];
+        setCompTec(items.filter((x) => (x.categoria || "").toLowerCase() === "tecnologicas").map((x) => x.nombre));
+        setCompSoc(items.filter((x) => (x.categoria || "").toLowerCase() === "sociales").map((x) => x.nombre));
+        const { data: esp } = await supabase.from("competencias_especificas").select("nombre,activo").eq("activo", true).order("nombre");
+        setCompEsp(((esp as CompetenciaEspecifica[]) || []).map((x) => x.nombre));
+      } catch {}
+    };
     fetchAsignaturas();
+    fetchCompetencias();
   }, []);
 
   function normalizarAnio(v: string) {
@@ -161,8 +163,7 @@ export default function NuevaPropuestaPage() {
     const tieneAsignatura = Boolean(p.asignatura.trim());
     if (!tieneAsignatura) errs.propuesta.asignatura = "Seleccione una asignatura";
     if (tieneAsignatura && p.competenciasGenericas.length === 0) errs.propuesta.competenciasGenericas = "Seleccione al menos una competencia genérica";
-    if (tieneAsignatura && p.competenciasEspecificas.length === 0) errs.propuesta.competenciasEspecificas = "Seleccione al menos una competencia específica";
-    const hayErr = Boolean(errs.docente?.nombre || errs.docente?.apellido || errs.propuesta?.asignatura || errs.propuesta?.competenciasGenericas || errs.propuesta?.competenciasEspecificas);
+    const hayErr = Boolean(errs.docente?.nombre || errs.docente?.apellido || errs.propuesta?.asignatura || errs.propuesta?.competenciasGenericas);
     if (hayErr) {
       setErrores(errs);
       window.scrollTo({ top: 0, behavior: "smooth" });
@@ -218,6 +219,38 @@ export default function NuevaPropuestaPage() {
       }
       for (const corrId of p.correlativasAprobadasIds) {
         await supabase.from("propuestas_plan_correlativas_aprobadas").insert({ propuesta_plan_id: propuestaId, correlativa_id: corrId });
+      }
+
+      for (const nombreComp of p.competenciasGenericas) {
+        const { data: genRow } = await supabase
+          .from("competencias_genericas")
+          .select("id")
+          .eq("nombre", nombreComp)
+          .single();
+        let genId = (genRow as { id: number } | null)?.id ?? null;
+        if (!genId) {
+          const { data: ins } = await supabase.from("competencias_genericas").insert({ nombre: nombreComp }).select().single();
+          genId = (ins as { id: number } | null)?.id ?? null;
+        }
+        if (genId) {
+          await supabase.from("propuestas_plan_competencias_genericas").insert({ propuesta_plan_id: propuestaId, competencia_generica_id: genId });
+        }
+      }
+
+      for (const nombreComp of p.competenciasEspecificas) {
+        const { data: espRow } = await supabase
+          .from("competencias_especificas")
+          .select("id")
+          .eq("nombre", nombreComp)
+          .single();
+        let espId = (espRow as { id: number } | null)?.id ?? null;
+        if (!espId) {
+          const { data: ins } = await supabase.from("competencias_especificas").insert({ nombre: nombreComp }).select().single();
+          espId = (ins as { id: number } | null)?.id ?? null;
+        }
+        if (espId) {
+          await supabase.from("propuestas_plan_competencias_especificas").insert({ propuesta_plan_id: propuestaId, competencia_especifica_id: espId });
+        }
       }
     }
     setEnviando(false);
@@ -371,7 +404,18 @@ export default function NuevaPropuestaPage() {
                   <div className="mt-3">
                     <p className="text-sm font-semibold">Competencias tecnológicas</p>
                     <div className="mt-2 space-y-2">
-                      {COMP_TEC.map((c) => (
+                      {compTec.map((c) => (
+                        <label key={c} className="flex items-start gap-2 text-sm">
+                          <input type="checkbox" className="mt-1" checked={p.competenciasGenericas.includes(c)} onChange={() => { toggleCheck("competenciasGenericas", c); setErrores((prev) => ({ ...prev, propuesta: { ...(prev.propuesta || {}), competenciasGenericas: undefined } })); }} />
+                          <span>{c}</span>
+                        </label>
+                      ))}
+                    </div>
+                  </div>
+                  <div className="mt-4">
+                    <p className="text-sm font-semibold">Competencias sociales, políticas y actitudinales</p>
+                    <div className="mt-2 space-y-2">
+                      {compSoc.map((c) => (
                         <label key={c} className="flex items-start gap-2 text-sm">
                           <input type="checkbox" className="mt-1" checked={p.competenciasGenericas.includes(c)} onChange={() => { toggleCheck("competenciasGenericas", c); setErrores((prev) => ({ ...prev, propuesta: { ...(prev.propuesta || {}), competenciasGenericas: undefined } })); }} />
                           <span>{c}</span>
@@ -380,32 +424,21 @@ export default function NuevaPropuestaPage() {
                     </div>
                     {errores.propuesta?.competenciasGenericas && <p className="mt-2 text-xs text-red-600">{errores.propuesta?.competenciasGenericas}</p>}
                   </div>
-                  <div className="mt-4">
-                    <p className="text-sm font-semibold">Competencias sociales, políticas y actitudinales</p>
-                    <div className="mt-2 space-y-2">
-                      {COMP_SOC.map((c) => (
-                        <label key={c} className="flex items-start gap-2 text-sm">
-                          <input type="checkbox" className="mt-1" checked={p.competenciasGenericas.includes(c)} onChange={() => { toggleCheck("competenciasGenericas", c); setErrores((prev) => ({ ...prev, propuesta: { ...(prev.propuesta || {}), competenciasGenericas: undefined } })); }} />
-                          <span>{c}</span>
-                        </label>
-                      ))}
-                    </div>
-                  </div>
                 </div>
 
                 <hr className="my-2 border-zinc-200" />
                 <div>
                   <p className="text-sm font-medium">Competencias específicas (Libro Rojo)</p>
-                  <p className="text-xs text-zinc-600">Seleccione al menos una opción</p>
+                  <p className="text-xs text-zinc-600">Opcional</p>
                   <div className="mt-2 space-y-2">
-                    {COMP_ESP.map((c) => (
-                      <label key={c} className="flex items-start gap-2 text-sm">
-                        <input type="checkbox" className="mt-1" checked={p.competenciasEspecificas.includes(c)} onChange={() => { toggleCheck("competenciasEspecificas", c); setErrores((prev) => ({ ...prev, propuesta: { ...(prev.propuesta || {}), competenciasEspecificas: undefined } })); }} />
-                        <span>{c}</span>
-                      </label>
-                    ))}
+                      {compEsp.map((c) => (
+                        <label key={c} className="flex items-start gap-2 text-sm">
+                        <input type="checkbox" className="mt-1" checked={p.competenciasEspecificas.includes(c)} onChange={() => { toggleCheck("competenciasEspecificas", c); }} />
+                          <span>{c}</span>
+                        </label>
+                      ))}
                   </div>
-                  {errores.propuesta?.competenciasEspecificas && <p className="mt-2 text-xs text-red-600">{errores.propuesta?.competenciasEspecificas}</p>}
+                  
                 </div>
 
                 <div>
