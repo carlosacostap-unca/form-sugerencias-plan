@@ -216,6 +216,27 @@ insert into public.asignaturas (nombre) values
   ('Bases de Datos'),
   ('Sistemas Operativos')
 on conflict (nombre) do nothing;
+
+-- Alternativas de planes: lectura e inserción
+drop policy if exists alternativas_planes_select_public on public.alternativas_planes;
+create policy alternativas_planes_select_public
+  on public.alternativas_planes for select to public
+  using (true);
+
+drop policy if exists alternativas_planes_insert_public on public.alternativas_planes;
+create policy alternativas_planes_insert_public
+  on public.alternativas_planes for insert to public
+  with check (true);
+
+drop policy if exists alternativas_planes_asignaturas_select_public on public.alternativas_planes_asignaturas;
+create policy alternativas_planes_asignaturas_select_public
+  on public.alternativas_planes_asignaturas for select to public
+  using (true);
+
+drop policy if exists alternativas_planes_asignaturas_insert_public on public.alternativas_planes_asignaturas;
+create policy alternativas_planes_asignaturas_insert_public
+  on public.alternativas_planes_asignaturas for insert to public
+  with check (true);
 ```
 
 ## Conexión desde el proyecto

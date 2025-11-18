@@ -115,6 +115,24 @@ CREATE TABLE public.propuestas_plan (
   CONSTRAINT propuestas_plan_docente_id_fkey FOREIGN KEY (docente_id) REFERENCES public.docentes(id),
   CONSTRAINT propuestas_plan_asignatura_id_fkey FOREIGN KEY (asignatura_id) REFERENCES public.asignaturas(id)
 );
+CREATE TABLE public.propuestas_plan_competencias_especificas (
+  id bigint GENERATED ALWAYS AS IDENTITY NOT NULL,
+  propuesta_plan_id bigint NOT NULL,
+  competencia_especifica_id bigint NOT NULL,
+  created_at timestamp with time zone NOT NULL DEFAULT now(),
+  CONSTRAINT propuestas_plan_competencias_especificas_pkey PRIMARY KEY (id),
+  CONSTRAINT propuestas_plan_competencias_especificas_propuesta_plan_id_fkey FOREIGN KEY (propuesta_plan_id) REFERENCES public.propuestas_plan(id),
+  CONSTRAINT propuestas_plan_competencias_esp_competencia_especifica_id_fkey FOREIGN KEY (competencia_especifica_id) REFERENCES public.competencias_especificas(id)
+);
+CREATE TABLE public.propuestas_plan_competencias_genericas (
+  id bigint GENERATED ALWAYS AS IDENTITY NOT NULL,
+  propuesta_plan_id bigint NOT NULL,
+  competencia_generica_id bigint NOT NULL,
+  created_at timestamp with time zone NOT NULL DEFAULT now(),
+  CONSTRAINT propuestas_plan_competencias_genericas_pkey PRIMARY KEY (id),
+  CONSTRAINT propuestas_plan_competencias_genericas_propuesta_plan_id_fkey FOREIGN KEY (propuesta_plan_id) REFERENCES public.propuestas_plan(id),
+  CONSTRAINT propuestas_plan_competencias_gener_competencia_generica_id_fkey FOREIGN KEY (competencia_generica_id) REFERENCES public.competencias_genericas(id)
+);
 CREATE TABLE public.propuestas_plan_correlativas_aprobadas (
   id bigint GENERATED ALWAYS AS IDENTITY NOT NULL,
   propuesta_plan_id bigint NOT NULL,
@@ -132,4 +150,23 @@ CREATE TABLE public.propuestas_plan_correlativas_regularizadas (
   CONSTRAINT propuestas_plan_correlativas_regularizadas_pkey PRIMARY KEY (id),
   CONSTRAINT propuestas_plan_correlativas_regularizad_propuesta_plan_id_fkey FOREIGN KEY (propuesta_plan_id) REFERENCES public.propuestas_plan(id),
   CONSTRAINT propuestas_plan_correlativas_regularizadas_correlativa_id_fkey FOREIGN KEY (correlativa_id) REFERENCES public.asignaturas(id)
+);
+
+-- Nuevas tablas para alternativas de planes de estudio
+CREATE TABLE public.alternativas_planes (
+  id bigint GENERATED ALWAYS AS IDENTITY NOT NULL,
+  titulo text NOT NULL,
+  fecha_hora timestamp with time zone NOT NULL,
+  created_at timestamp with time zone NOT NULL DEFAULT now(),
+  CONSTRAINT alternativas_planes_pkey PRIMARY KEY (id)
+);
+CREATE TABLE public.alternativas_planes_asignaturas (
+  id bigint GENERATED ALWAYS AS IDENTITY NOT NULL,
+  alternativa_id bigint NOT NULL,
+  anio text,
+  codigo text,
+  nombre text NOT NULL,
+  created_at timestamp with time zone NOT NULL DEFAULT now(),
+  CONSTRAINT alternativas_planes_asignaturas_pkey PRIMARY KEY (id),
+  CONSTRAINT alternativas_planes_asignaturas_alternativa_id_fkey FOREIGN KEY (alternativa_id) REFERENCES public.alternativas_planes(id) ON DELETE CASCADE
 );

@@ -1,5 +1,5 @@
 "use client";
-import { useEffect, useState } from "react";
+import { useEffect, useMemo, useState } from "react";
 import { useRouter } from "next/navigation";
 import { getSupabaseAnon } from "../lib/supabase";
 
@@ -36,6 +36,8 @@ type Aporte = {
   detalle: string;
 };
 
+type Docente = { id: number; nombre: string; apellido: string };
+
 type AsignaturaDB = {
   id: number;
   nombre: string;
@@ -66,6 +68,19 @@ export default function Home() {
   const [aportes, setAportes] = useState<Aporte[]>([]);
   const [asignaturas, setAsignaturas] = useState<AsignaturaDB[]>([]);
   const [errores, setErrores] = useState<{ docente: { nombre?: string; apellido?: string }; propuestas: Record<number, { asignatura?: string; competenciasGenericas?: string; competenciasEspecificas?: string }>; optativas: Record<number, { asignatura?: string }>; aportes: Record<number, { detalle?: string }> }>({ docente: {}, propuestas: {}, optativas: {}, aportes: {} });
+  const [docentesRecibidos, setDocentesRecibidos] = useState<Docente[]>([]);
+  const docentesUnicos = useMemo(() => {
+    const map = new Map<string, Docente>();
+    for (const d of docentesRecibidos) {
+      const key = `${(d.nombre || "").trim().toLowerCase()} ${(d.apellido || "").trim().toLowerCase()}`.trim();
+      if (!map.has(key)) map.set(key, d);
+    }
+    return Array.from(map.values()).sort((a, b) => {
+      const aa = (a.apellido || "").localeCompare(b.apellido || "");
+      if (aa !== 0) return aa;
+      return (a.nombre || "").localeCompare(b.nombre || "");
+    });
+  }, [docentesRecibidos]);
   
   const [cargandoAsignaturas, setCargandoAsignaturas] = useState<Record<number, boolean>>({});
   const [compTec, setCompTec] = useState<string[]>([]);
@@ -95,8 +110,30 @@ export default function Home() {
         setCompEsp(((esp as CompetenciaEspecifica[]) || []).map((x) => x.nombre));
       } catch {}
     };
+    const fetchDocentesConPropuestas = async () => {
+      try {
+        const supabase = getSupabaseAnon();
+        const [pp, po, ag] = await Promise.all([
+          supabase.from("propuestas_plan").select("docente_id"),
+          supabase.from("propuestas_optativas").select("docente_id"),
+          supabase.from("aportes_generales").select("docente_id"),
+        ]);
+        const ids = new Set<number>();
+        for (const r of [pp.data ?? [], po.data ?? [], ag.data ?? []]) {
+          for (const x of r as { docente_id: number }[]) ids.add(x.docente_id);
+        }
+        const arr = Array.from(ids);
+        if (arr.length === 0) {
+          setDocentesRecibidos([]);
+          return;
+        }
+        const { data: dcs } = await supabase.from("docentes").select("id,nombre,apellido").in("id", arr).order("apellido");
+        setDocentesRecibidos((dcs as Docente[]) || []);
+      } catch {}
+    };
     fetchAsignaturas();
     fetchCompetencias();
+    fetchDocentesConPropuestas();
   }, []);
 
   function normalizarAnio(v: string) {
@@ -519,6 +556,23 @@ export default function Home() {
             <div className="mt-6">
               <button className="rounded-md bg-blue-600 px-4 py-2 text-sm font-medium text-white hover:bg-blue-700" onClick={() => router.push("/aporte/nueva")}>Iniciar propuesta</button>
             </div>
+          )}
+        </section>
+
+        <section className="mt-6 rounded-xl bg-white p-6 text-zinc-900 shadow">
+          <h2 className="text-xl font-semibold">4. Docentes con propuestas recibidas</h2>
+          <p className="mt-1 text-sm text-zinc-600">Listado de docentes que han enviado propuestas</p>
+          <hr className="my-4 border-zinc-200" />
+          {docentesUnicos.length === 0 ? (
+            <p className="text-sm text-zinc-600">Aún no se registran propuestas.</p>
+          ) : (
+            <ul className="mt-2 grid grid-cols-1 gap-2 sm:grid-cols-2">
+              {docentesUnicos.map((d) => (
+                <li key={`${d.nombre}-${d.apellido}`} className="flex items-center justify-between rounded-md border border-zinc-200 bg-zinc-50 px-3 py-2 text-sm">
+                  <span>{`${d.nombre} ${d.apellido}`.trim()}</span>
+                </li>
+              ))}
+            </ul>
           )}
         </section>
       </div>
