@@ -8,9 +8,17 @@ type AsigAlt = { anio: string; codigo: string; nombre: string };
 export default function NuevaAlternativaPage() {
   const router = useRouter();
   const [titulo, setTitulo] = useState("");
-  const [fechaHora, setFechaHora] = useState("");
+  
+  const [regimen, setRegimen] = useState("");
+  const [horasSemanales, setHorasSemanales] = useState("");
+  const [horasTotales, setHorasTotales] = useState("");
+  const [bloquesConocimiento, setBloquesConocimiento] = useState("");
+  const [coefHorasTI, setCoefHorasTI] = useState("");
+  const [horasTITotales, setHorasTITotales] = useState("");
+  const [horasTrabajoTotales, setHorasTrabajoTotales] = useState("");
+
   const [items, setItems] = useState<AsigAlt[]>([{ anio: "", codigo: "", nombre: "" }]);
-  const [errores, setErrores] = useState<{ alternativa?: { titulo?: string; fechaHora?: string; asignaturas?: string } }>({});
+  const [errores, setErrores] = useState<{ alternativa?: { titulo?: string; asignaturas?: string } }>({});
   const [enviando, setEnviando] = useState(false);
 
   const agregarItem = () => {
@@ -29,10 +37,9 @@ export default function NuevaAlternativaPage() {
     const errs: typeof errores = {};
     errs.alternativa = {};
     if (!titulo.trim()) errs.alternativa.titulo = "Título requerido";
-    if (!fechaHora.trim()) errs.alternativa.fechaHora = "Fecha y hora requeridas";
     const hayAsignaturas = items.length > 0 && items.some((x) => x.nombre.trim());
     if (!hayAsignaturas) errs.alternativa.asignaturas = "Agregue al menos una asignatura";
-    const hayErr = Boolean(errs.alternativa?.titulo || errs.alternativa?.fechaHora || errs.alternativa?.asignaturas);
+    const hayErr = Boolean(errs.alternativa?.titulo || errs.alternativa?.asignaturas);
     if (hayErr) {
       setErrores(errs);
       window.scrollTo({ top: 0, behavior: "smooth" });
@@ -41,8 +48,22 @@ export default function NuevaAlternativaPage() {
     setEnviando(true);
     try {
       const supabase = getSupabaseAnon();
-      const iso = new Date(fechaHora).toISOString();
-      const { data: alt, error: altErr } = await supabase.from("alternativas_planes").insert({ titulo, fecha_hora: iso }).select().single();
+      const iso = new Date().toISOString();
+      const { data: alt, error: altErr } = await supabase
+        .from("alternativas_planes")
+        .insert({
+          titulo,
+          fecha_hora: iso,
+          regimen: regimen || null,
+          horas_semanales: horasSemanales || null,
+          horas_totales: horasTotales || null,
+          bloques_conocimiento: bloquesConocimiento || null,
+          coeficiente_horas_trabajo_independiente: coefHorasTI || null,
+          horas_trabajo_independiente_totales: horasTITotales || null,
+          horas_trabajo_totales: horasTrabajoTotales || null,
+        })
+        .select()
+        .single();
       if (altErr) throw new Error(altErr.message);
       const alternativaId = (alt as { id: number }).id;
       for (const it of items) {
@@ -93,17 +114,71 @@ export default function NuevaAlternativaPage() {
               {errores.alternativa?.titulo && <p className="mt-1 text-xs text-red-600">{errores.alternativa?.titulo}</p>}
             </div>
             <div>
-              <label className="mb-1 block text-sm font-medium">Fecha y hora *</label>
+              <label className="mb-1 block text-sm font-medium">Régimen</label>
+              <select
+                className="w-full rounded-md border border-zinc-300 bg-white px-3 py-2 text-sm text-zinc-900 outline-none focus:ring-2 focus:ring-blue-600"
+                value={regimen}
+                onChange={(e) => setRegimen(e.target.value)}
+              >
+                <option value="">Seleccione...</option>
+                <option value="Anual">Anual</option>
+                <option value="1º Cuatr.">1º Cuatr.</option>
+                <option value="2º Cuatr.">2º Cuatr.</option>
+              </select>
+            </div>
+            <div>
+              <label className="mb-1 block text-sm font-medium">Cant. horas semanales sincrónicas</label>
               <input
-                type="datetime-local"
                 className="w-full rounded-md border border-zinc-300 bg-white px-3 py-2 text-sm text-zinc-900 placeholder:text-zinc-500 outline-none focus:ring-2 focus:ring-blue-600"
-                value={fechaHora}
-                onChange={(e) => {
-                  setFechaHora(e.target.value);
-                  setErrores((prev) => ({ ...prev, alternativa: { ...(prev.alternativa || {}), fechaHora: undefined } }));
-                }}
+                placeholder="Ej: 4"
+                value={horasSemanales}
+                onChange={(e) => setHorasSemanales(e.target.value)}
               />
-              {errores.alternativa?.fechaHora && <p className="mt-1 text-xs text-red-600">{errores.alternativa?.fechaHora}</p>}
+            </div>
+            <div>
+              <label className="mb-1 block text-sm font-medium">Cant. total de horas sincrónicas</label>
+              <input
+                className="w-full rounded-md border border-zinc-300 bg-white px-3 py-2 text-sm text-zinc-900 placeholder:text-zinc-500 outline-none focus:ring-2 focus:ring-blue-600"
+                placeholder="Ej: 60"
+                value={horasTotales}
+                onChange={(e) => setHorasTotales(e.target.value)}
+              />
+            </div>
+            <div className="sm:col-span-2">
+              <label className="mb-1 block text-sm font-medium">Bloques de conocimiento</label>
+              <textarea
+                className="min-h-24 w-full rounded-md border border-zinc-300 bg-white px-3 py-2 text-sm text-zinc-900 placeholder:text-zinc-500 outline-none focus:ring-2 focus:ring-blue-600"
+                placeholder="Describa los bloques de conocimiento"
+                value={bloquesConocimiento}
+                onChange={(e) => setBloquesConocimiento(e.target.value)}
+              />
+            </div>
+            <div>
+              <label className="mb-1 block text-sm font-medium">Coef. horas de trabajo independiente</label>
+              <input
+                className="w-full rounded-md border border-zinc-300 bg-white px-3 py-2 text-sm text-zinc-900 placeholder:text-zinc-500 outline-none focus:ring-2 focus:ring-blue-600"
+                placeholder="Ej: 1.5"
+                value={coefHorasTI}
+                onChange={(e) => setCoefHorasTI(e.target.value)}
+              />
+            </div>
+            <div>
+              <label className="mb-1 block text-sm font-medium">Total horas de trabajo independiente</label>
+              <input
+                className="w-full rounded-md border border-zinc-300 bg-white px-3 py-2 text-sm text-zinc-900 placeholder:text-zinc-500 outline-none focus:ring-2 focus:ring-blue-600"
+                placeholder="Ej: 90"
+                value={horasTITotales}
+                onChange={(e) => setHorasTITotales(e.target.value)}
+              />
+            </div>
+            <div>
+              <label className="mb-1 block text-sm font-medium">Total horas de trabajo</label>
+              <input
+                className="w-full rounded-md border border-zinc-300 bg-white px-3 py-2 text-sm text-zinc-900 placeholder:text-zinc-500 outline-none focus:ring-2 focus:ring-blue-600"
+                placeholder="Ej: 150"
+                value={horasTrabajoTotales}
+                onChange={(e) => setHorasTrabajoTotales(e.target.value)}
+              />
             </div>
           </div>
         </section>
@@ -115,12 +190,18 @@ export default function NuevaAlternativaPage() {
               <div key={idx} className="grid grid-cols-1 gap-4 sm:grid-cols-4">
                 <div>
                   <label className="mb-1 block text-sm font-medium">Año</label>
-                  <input
-                    className="w-full rounded-md border border-zinc-300 bg-white px-3 py-2 text-sm text-zinc-900 placeholder:text-zinc-500 outline-none focus:ring-2 focus:ring-blue-600"
-                    placeholder="Ej: 1º, 2º"
+                  <select
+                    className="w-full rounded-md border border-zinc-300 bg-white px-3 py-2 text-sm text-zinc-900 outline-none focus:ring-2 focus:ring-blue-600"
                     value={it.anio}
                     onChange={(e) => actualizarItem(idx, "anio", e.target.value)}
-                  />
+                  >
+                    <option value="">Seleccione...</option>
+                    <option value="1º">1º</option>
+                    <option value="2º">2º</option>
+                    <option value="3º">3º</option>
+                    <option value="4º">4º</option>
+                    <option value="5º">5º</option>
+                  </select>
                 </div>
                 <div>
                   <label className="mb-1 block text-sm font-medium">Código</label>

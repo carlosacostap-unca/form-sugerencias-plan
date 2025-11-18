@@ -3,7 +3,19 @@ import { useEffect, useState } from "react";
 import { useParams, useRouter } from "next/navigation";
 import { getSupabaseAnon } from "../../../lib/supabase";
 
-type Alternativa = { id: number; titulo: string; fecha_hora: string; created_at: string };
+type Alternativa = {
+  id: number;
+  titulo: string;
+  fecha_hora: string;
+  regimen: string | null;
+  horas_semanales: string | null;
+  horas_totales: string | null;
+  bloques_conocimiento: string | null;
+  coeficiente_horas_trabajo_independiente: string | null;
+  horas_trabajo_independiente_totales: string | null;
+  horas_trabajo_totales: string | null;
+  created_at: string;
+};
 type AsignaturaAlt = { id: number; alternativa_id: number; anio: string | null; codigo: string | null; nombre: string; created_at: string };
 
 export default function AlternativaDetallePage() {
@@ -19,7 +31,13 @@ export default function AlternativaDetallePage() {
     const fetch = async () => {
       try {
         const supabase = getSupabaseAnon();
-        const { data: a } = await supabase.from("alternativas_planes").select("id,titulo,fecha_hora,created_at").eq("id", idNum).single();
+        const { data: a } = await supabase
+          .from("alternativas_planes")
+          .select(
+            "id,titulo,fecha_hora,regimen,horas_semanales,horas_totales,bloques_conocimiento,coeficiente_horas_trabajo_independiente,horas_trabajo_independiente_totales,horas_trabajo_totales,created_at"
+          )
+          .eq("id", idNum)
+          .single();
         setAlt((a as Alternativa) || null);
         const { data: s } = await supabase
           .from("alternativas_planes_asignaturas")
@@ -55,6 +73,36 @@ export default function AlternativaDetallePage() {
             <div>
               <h2 className="text-xl font-semibold text-zinc-900">{alt.titulo}</h2>
               <p className="mt-1 text-sm text-zinc-600">{new Date(alt.fecha_hora).toLocaleString()}</p>
+              <div className="mt-4 grid grid-cols-1 gap-4 sm:grid-cols-2">
+                <div>
+                  <p className="text-xs text-zinc-500">Régimen</p>
+                  <p className="text-sm text-zinc-900">{alt.regimen || "-"}</p>
+                </div>
+                <div>
+                  <p className="text-xs text-zinc-500">Horas semanales sincrónicas</p>
+                  <p className="text-sm text-zinc-900">{alt.horas_semanales || "-"}</p>
+                </div>
+                <div>
+                  <p className="text-xs text-zinc-500">Total horas sincrónicas</p>
+                  <p className="text-sm text-zinc-900">{alt.horas_totales || "-"}</p>
+                </div>
+                <div>
+                  <p className="text-xs text-zinc-500">Coef. trabajo independiente</p>
+                  <p className="text-sm text-zinc-900">{alt.coeficiente_horas_trabajo_independiente || "-"}</p>
+                </div>
+                <div>
+                  <p className="text-xs text-zinc-500">Total horas trabajo independiente</p>
+                  <p className="text-sm text-zinc-900">{alt.horas_trabajo_independiente_totales || "-"}</p>
+                </div>
+                <div>
+                  <p className="text-xs text-zinc-500">Total horas de trabajo</p>
+                  <p className="text-sm text-zinc-900">{alt.horas_trabajo_totales || "-"}</p>
+                </div>
+                <div className="sm:col-span-2">
+                  <p className="text-xs text-zinc-500">Bloques de conocimiento</p>
+                  <p className="text-sm text-zinc-900 whitespace-pre-wrap">{alt.bloques_conocimiento || "-"}</p>
+                </div>
+              </div>
               <div className="mt-6">
                 <h3 className="text-lg font-semibold">Asignaturas</h3>
                 {asigs.length === 0 ? (

@@ -1,6 +1,30 @@
 -- WARNING: This schema is for context only and is not meant to be run.
 -- Table order and constraints may not be valid for execution.
 
+CREATE TABLE public.alternativas_planes (
+  id bigint GENERATED ALWAYS AS IDENTITY NOT NULL,
+  titulo text NOT NULL,
+  fecha_hora timestamp with time zone NOT NULL,
+  regimen text,
+  horas_semanales text,
+  horas_totales text,
+  bloques_conocimiento text,
+  coeficiente_horas_trabajo_independiente text,
+  horas_trabajo_independiente_totales text,
+  horas_trabajo_totales text,
+  created_at timestamp with time zone NOT NULL DEFAULT now(),
+  CONSTRAINT alternativas_planes_pkey PRIMARY KEY (id)
+);
+CREATE TABLE public.alternativas_planes_asignaturas (
+  id bigint GENERATED ALWAYS AS IDENTITY NOT NULL,
+  alternativa_id bigint NOT NULL,
+  anio text,
+  codigo text,
+  nombre text NOT NULL,
+  created_at timestamp with time zone NOT NULL DEFAULT now(),
+  CONSTRAINT alternativas_planes_asignaturas_pkey PRIMARY KEY (id),
+  CONSTRAINT alternativas_planes_asignaturas_alternativa_id_fkey FOREIGN KEY (alternativa_id) REFERENCES public.alternativas_planes(id)
+);
 CREATE TABLE public.aportes_generales (
   id bigint GENERATED ALWAYS AS IDENTITY NOT NULL,
   docente_id bigint NOT NULL,
@@ -150,23 +174,4 @@ CREATE TABLE public.propuestas_plan_correlativas_regularizadas (
   CONSTRAINT propuestas_plan_correlativas_regularizadas_pkey PRIMARY KEY (id),
   CONSTRAINT propuestas_plan_correlativas_regularizad_propuesta_plan_id_fkey FOREIGN KEY (propuesta_plan_id) REFERENCES public.propuestas_plan(id),
   CONSTRAINT propuestas_plan_correlativas_regularizadas_correlativa_id_fkey FOREIGN KEY (correlativa_id) REFERENCES public.asignaturas(id)
-);
-
--- Nuevas tablas para alternativas de planes de estudio
-CREATE TABLE public.alternativas_planes (
-  id bigint GENERATED ALWAYS AS IDENTITY NOT NULL,
-  titulo text NOT NULL,
-  fecha_hora timestamp with time zone NOT NULL,
-  created_at timestamp with time zone NOT NULL DEFAULT now(),
-  CONSTRAINT alternativas_planes_pkey PRIMARY KEY (id)
-);
-CREATE TABLE public.alternativas_planes_asignaturas (
-  id bigint GENERATED ALWAYS AS IDENTITY NOT NULL,
-  alternativa_id bigint NOT NULL,
-  anio text,
-  codigo text,
-  nombre text NOT NULL,
-  created_at timestamp with time zone NOT NULL DEFAULT now(),
-  CONSTRAINT alternativas_planes_asignaturas_pkey PRIMARY KEY (id),
-  CONSTRAINT alternativas_planes_asignaturas_alternativa_id_fkey FOREIGN KEY (alternativa_id) REFERENCES public.alternativas_planes(id) ON DELETE CASCADE
 );
