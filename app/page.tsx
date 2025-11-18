@@ -75,10 +75,11 @@ export default function Home() {
       const key = `${(d.nombre || "").trim().toLowerCase()} ${(d.apellido || "").trim().toLowerCase()}`.trim();
       if (!map.has(key)) map.set(key, d);
     }
+    const collator = new Intl.Collator("es", { sensitivity: "base" });
     return Array.from(map.values()).sort((a, b) => {
-      const aa = (a.apellido || "").localeCompare(b.apellido || "");
-      if (aa !== 0) return aa;
-      return (a.nombre || "").localeCompare(b.nombre || "");
+      const sa = `${(a.nombre || "").trim()} ${(a.apellido || "").trim()}`.trim();
+      const sb = `${(b.nombre || "").trim()} ${(b.apellido || "").trim()}`.trim();
+      return collator.compare(sa, sb);
     });
   }, [docentesRecibidos]);
   
