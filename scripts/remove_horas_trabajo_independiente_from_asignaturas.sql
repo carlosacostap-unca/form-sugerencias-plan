@@ -1,0 +1,1 @@
+alter table public.asignaturas drop column if exists horas_trabajo_independiente;

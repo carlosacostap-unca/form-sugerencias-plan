@@ -3,45 +3,119 @@ import { useState } from "react";
 import { useRouter } from "next/navigation";
 import { getSupabaseAnon } from "../../../lib/supabase";
 
-type AsigAlt = { anio: string; codigo: string; nombre: string };
+type AsigAlt = {
+  anio: string;
+  codigo: string;
+  nombre: string;
+  regimen: string;
+  horasSemanales: string;
+  horasTotales: string;
+  bloqueConocimiento: string;
+  coefHorasTI: string;
+  horasTITotales: string;
+  horasTrabajoTotales: string;
+  correlativasRegularizadas: string[];
+  correlativasAprobadas: string[];
+};
 
 export default function NuevaAlternativaPage() {
   const router = useRouter();
   const [titulo, setTitulo] = useState("");
   
-  const [regimen, setRegimen] = useState("");
-  const [horasSemanales, setHorasSemanales] = useState("");
-  const [horasTotales, setHorasTotales] = useState("");
-  const [bloquesConocimiento, setBloquesConocimiento] = useState("");
-  const [coefHorasTI, setCoefHorasTI] = useState("");
-  const [horasTITotales, setHorasTITotales] = useState("");
-  const [horasTrabajoTotales, setHorasTrabajoTotales] = useState("");
 
-  const [items, setItems] = useState<AsigAlt[]>([{ anio: "", codigo: "", nombre: "" }]);
+  const [items, setItems] = useState<AsigAlt[]>([
+    { anio: "", codigo: "", nombre: "", regimen: "", horasSemanales: "", horasTotales: "", bloqueConocimiento: "", coefHorasTI: "", horasTITotales: "", horasTrabajoTotales: "", correlativasRegularizadas: [], correlativasAprobadas: [] },
+  ]);
   const [errores, setErrores] = useState<{ alternativa?: { titulo?: string; asignaturas?: string } }>({});
+  const [erroresItems, setErroresItems] = useState<Record<number, { anio?: string; codigo?: string; nombre?: string; regimen?: string; horasSemanales?: string; bloqueConocimiento?: string }>>({});
   const [enviando, setEnviando] = useState(false);
 
   const agregarItem = () => {
-    setItems((prev) => [...prev, { anio: "", codigo: "", nombre: "" }]);
+    setItems((prev) => [...prev, { anio: "", codigo: "", nombre: "", regimen: "", horasSemanales: "", horasTotales: "", bloqueConocimiento: "", coefHorasTI: "", horasTITotales: "", horasTrabajoTotales: "", correlativasRegularizadas: [], correlativasAprobadas: [] }]);
   };
 
   const quitarItem = (idx: number) => {
     setItems((prev) => prev.filter((_, i) => i !== idx));
   };
 
-  const actualizarItem = (idx: number, campo: keyof AsigAlt, valor: string) => {
-    setItems((prev) => prev.map((it, i) => (i === idx ? { ...it, [campo]: valor } : it)));
+  const factorRegimen = (r: string) => (r === "Anual" ? 30 : r.includes("Cuatr") ? 15 : undefined);
+  const calcularHorasTotales = (regimen: string, horasSemanales: string) => {
+    const f = factorRegimen(regimen);
+    const hs = Number(horasSemanales);
+    if (!f || !hs) return "";
+    return String(hs * f);
+  };
+  const coefPorBloque = (b: string) =>
+    b === "Ciencias Básicas de la Ingeniería"
+      ? "1.25"
+      : b === "Tecnologías Básicas"
+      ? "1.50"
+      : b === "Tecnologías Aplicadas"
+      ? "2.00"
+      : b === "Ciencias y Tecnologías Complementarias"
+      ? "1.00"
+      : "";
+  const calcularHorasTrabajoIndepTotales = (horasTotales: string, coef: string) => {
+    const ht = Number(horasTotales);
+    const c = Number(coef);
+    if (!ht || !c) return "";
+    return String(ht * c);
+  };
+  const calcularHorasTrabajoTotales = (horasTotales: string, independienteTotales: string) => {
+    const ht = Number(horasTotales);
+    const it = Number(independienteTotales);
+    if (!ht || !it) return "";
+    return String(ht + it);
+  };
+
+  const actualizarItem = (idx: number, campo: keyof AsigAlt, valor: string | string[]) => {
+    setItems((prev) =>
+      prev.map((it, i) => {
+        if (i !== idx) return it;
+        const actualizado = { ...it, [campo]: valor as any } as AsigAlt;
+        if (campo === "regimen" || campo === "horasSemanales") {
+          actualizado.horasTotales = calcularHorasTotales(actualizado.regimen, actualizado.horasSemanales);
+          actualizado.horasTITotales = calcularHorasTrabajoIndepTotales(actualizado.horasTotales, actualizado.coefHorasTI);
+          actualizado.horasTrabajoTotales = calcularHorasTrabajoTotales(actualizado.horasTotales, actualizado.horasTITotales);
+        }
+        if (campo === "bloqueConocimiento") {
+          actualizado.coefHorasTI = coefPorBloque(valor as string);
+          actualizado.horasTITotales = calcularHorasTrabajoIndepTotales(actualizado.horasTotales, actualizado.coefHorasTI);
+          actualizado.horasTrabajoTotales = calcularHorasTrabajoTotales(actualizado.horasTotales, actualizado.horasTITotales);
+        }
+        return actualizado;
+      })
+    );
+    if (campo === "anio" || campo === "codigo" || campo === "nombre" || campo === "regimen" || campo === "horasSemanales" || campo === "bloqueConocimiento") {
+      setErroresItems((prev) => ({ ...prev, [idx]: { ...(prev[idx] || {}), [campo]: undefined } }));
+    }
   };
 
   const enviar = async () => {
     const errs: typeof errores = {};
     errs.alternativa = {};
     if (!titulo.trim()) errs.alternativa.titulo = "Título requerido";
-    const hayAsignaturas = items.length > 0 && items.some((x) => x.nombre.trim());
-    if (!hayAsignaturas) errs.alternativa.asignaturas = "Agregue al menos una asignatura";
+    const nuevosErroresItems: Record<number, { anio?: string; codigo?: string; nombre?: string; regimen?: string; horasSemanales?: string; bloqueConocimiento?: string }> = {};
+    items.forEach((it, idx) => {
+      const req: (keyof AsigAlt)[] = ["anio", "codigo", "nombre", "regimen", "horasSemanales", "bloqueConocimiento"];
+      for (const k of req) {
+        const v = String((it as any)[k] || "").trim();
+        if (!v) {
+          const mensaje = k === "anio" ? "Año requerido" : k === "codigo" ? "Código requerido" : k === "nombre" ? "Nombre requerido" : k === "regimen" ? "Régimen requerido" : k === "horasSemanales" ? "Horas semanales requeridas" : "Bloque de conocimiento requerido";
+          nuevosErroresItems[idx] = { ...(nuevosErroresItems[idx] || {}), [k]: mensaje };
+        }
+      }
+      const hs = Number(it.horasSemanales);
+      if (!Number.isFinite(hs) || hs <= 0) {
+        nuevosErroresItems[idx] = { ...(nuevosErroresItems[idx] || {}), horasSemanales: "Ingrese horas semanales válidas" };
+      }
+    });
+    const hayAsignaturasValidas = items.length > 0 && Object.keys(nuevosErroresItems).length === 0;
+    if (!hayAsignaturasValidas) errs.alternativa.asignaturas = "Complete todos los campos de las asignaturas";
     const hayErr = Boolean(errs.alternativa?.titulo || errs.alternativa?.asignaturas);
     if (hayErr) {
       setErrores(errs);
+      setErroresItems(nuevosErroresItems);
       window.scrollTo({ top: 0, behavior: "smooth" });
       return;
     }
@@ -51,17 +125,7 @@ export default function NuevaAlternativaPage() {
       const iso = new Date().toISOString();
       const { data: alt, error: altErr } = await supabase
         .from("alternativas_planes")
-        .insert({
-          titulo,
-          fecha_hora: iso,
-          regimen: regimen || null,
-          horas_semanales: horasSemanales || null,
-          horas_totales: horasTotales || null,
-          bloques_conocimiento: bloquesConocimiento || null,
-          coeficiente_horas_trabajo_independiente: coefHorasTI || null,
-          horas_trabajo_independiente_totales: horasTITotales || null,
-          horas_trabajo_totales: horasTrabajoTotales || null,
-        })
+        .insert({ titulo, fecha_hora: iso })
         .select()
         .single();
       if (altErr) throw new Error(altErr.message);
@@ -70,7 +134,19 @@ export default function NuevaAlternativaPage() {
         if (!it.nombre.trim()) continue;
         const { error: asigErr } = await supabase
           .from("alternativas_planes_asignaturas")
-          .insert({ alternativa_id: alternativaId, anio: it.anio || null, codigo: it.codigo || null, nombre: it.nombre });
+          .insert({
+            alternativa_id: alternativaId,
+            anio: it.anio || null,
+            codigo: it.codigo || null,
+            nombre: it.nombre,
+            regimen: it.regimen || null,
+            horas_semanales: it.horasSemanales || null,
+            horas_totales: it.horasTotales || null,
+            bloque_conocimiento: it.bloqueConocimiento || null,
+            coeficiente_horas_trabajo_independiente: it.coefHorasTI || null,
+            horas_trabajo_independiente_totales: it.horasTITotales || null,
+            horas_trabajo_totales: it.horasTrabajoTotales || null,
+          });
         if (asigErr) throw new Error(asigErr.message);
       }
       setEnviando(false);
@@ -113,73 +189,6 @@ export default function NuevaAlternativaPage() {
               />
               {errores.alternativa?.titulo && <p className="mt-1 text-xs text-red-600">{errores.alternativa?.titulo}</p>}
             </div>
-            <div>
-              <label className="mb-1 block text-sm font-medium">Régimen</label>
-              <select
-                className="w-full rounded-md border border-zinc-300 bg-white px-3 py-2 text-sm text-zinc-900 outline-none focus:ring-2 focus:ring-blue-600"
-                value={regimen}
-                onChange={(e) => setRegimen(e.target.value)}
-              >
-                <option value="">Seleccione...</option>
-                <option value="Anual">Anual</option>
-                <option value="1º Cuatr.">1º Cuatr.</option>
-                <option value="2º Cuatr.">2º Cuatr.</option>
-              </select>
-            </div>
-            <div>
-              <label className="mb-1 block text-sm font-medium">Cant. horas semanales sincrónicas</label>
-              <input
-                className="w-full rounded-md border border-zinc-300 bg-white px-3 py-2 text-sm text-zinc-900 placeholder:text-zinc-500 outline-none focus:ring-2 focus:ring-blue-600"
-                placeholder="Ej: 4"
-                value={horasSemanales}
-                onChange={(e) => setHorasSemanales(e.target.value)}
-              />
-            </div>
-            <div>
-              <label className="mb-1 block text-sm font-medium">Cant. total de horas sincrónicas</label>
-              <input
-                className="w-full rounded-md border border-zinc-300 bg-white px-3 py-2 text-sm text-zinc-900 placeholder:text-zinc-500 outline-none focus:ring-2 focus:ring-blue-600"
-                placeholder="Ej: 60"
-                value={horasTotales}
-                onChange={(e) => setHorasTotales(e.target.value)}
-              />
-            </div>
-            <div className="sm:col-span-2">
-              <label className="mb-1 block text-sm font-medium">Bloques de conocimiento</label>
-              <textarea
-                className="min-h-24 w-full rounded-md border border-zinc-300 bg-white px-3 py-2 text-sm text-zinc-900 placeholder:text-zinc-500 outline-none focus:ring-2 focus:ring-blue-600"
-                placeholder="Describa los bloques de conocimiento"
-                value={bloquesConocimiento}
-                onChange={(e) => setBloquesConocimiento(e.target.value)}
-              />
-            </div>
-            <div>
-              <label className="mb-1 block text-sm font-medium">Coef. horas de trabajo independiente</label>
-              <input
-                className="w-full rounded-md border border-zinc-300 bg-white px-3 py-2 text-sm text-zinc-900 placeholder:text-zinc-500 outline-none focus:ring-2 focus:ring-blue-600"
-                placeholder="Ej: 1.5"
-                value={coefHorasTI}
-                onChange={(e) => setCoefHorasTI(e.target.value)}
-              />
-            </div>
-            <div>
-              <label className="mb-1 block text-sm font-medium">Total horas de trabajo independiente</label>
-              <input
-                className="w-full rounded-md border border-zinc-300 bg-white px-3 py-2 text-sm text-zinc-900 placeholder:text-zinc-500 outline-none focus:ring-2 focus:ring-blue-600"
-                placeholder="Ej: 90"
-                value={horasTITotales}
-                onChange={(e) => setHorasTITotales(e.target.value)}
-              />
-            </div>
-            <div>
-              <label className="mb-1 block text-sm font-medium">Total horas de trabajo</label>
-              <input
-                className="w-full rounded-md border border-zinc-300 bg-white px-3 py-2 text-sm text-zinc-900 placeholder:text-zinc-500 outline-none focus:ring-2 focus:ring-blue-600"
-                placeholder="Ej: 150"
-                value={horasTrabajoTotales}
-                onChange={(e) => setHorasTrabajoTotales(e.target.value)}
-              />
-            </div>
           </div>
         </section>
 
@@ -194,6 +203,7 @@ export default function NuevaAlternativaPage() {
                     className="w-full rounded-md border border-zinc-300 bg-white px-3 py-2 text-sm text-zinc-900 outline-none focus:ring-2 focus:ring-blue-600"
                     value={it.anio}
                     onChange={(e) => actualizarItem(idx, "anio", e.target.value)}
+                    required
                   >
                     <option value="">Seleccione...</option>
                     <option value="1º">1º</option>
@@ -202,6 +212,7 @@ export default function NuevaAlternativaPage() {
                     <option value="4º">4º</option>
                     <option value="5º">5º</option>
                   </select>
+                  {erroresItems[idx]?.anio && <p className="mt-1 text-xs text-red-600">{erroresItems[idx]?.anio}</p>}
                 </div>
                 <div>
                   <label className="mb-1 block text-sm font-medium">Código</label>
@@ -210,7 +221,9 @@ export default function NuevaAlternativaPage() {
                     placeholder="Código interno"
                     value={it.codigo}
                     onChange={(e) => actualizarItem(idx, "codigo", e.target.value)}
+                    required
                   />
+                  {erroresItems[idx]?.codigo && <p className="mt-1 text-xs text-red-600">{erroresItems[idx]?.codigo}</p>}
                 </div>
                 <div className="sm:col-span-2">
                   <label className="mb-1 block text-sm font-medium">Nombre *</label>
@@ -219,7 +232,135 @@ export default function NuevaAlternativaPage() {
                     placeholder="Nombre de la asignatura"
                     value={it.nombre}
                     onChange={(e) => actualizarItem(idx, "nombre", e.target.value)}
+                    required
                   />
+                  {erroresItems[idx]?.nombre && <p className="mt-1 text-xs text-red-600">{erroresItems[idx]?.nombre}</p>}
+                </div>
+                <div>
+                  <label className="mb-1 block text-sm font-medium">Régimen</label>
+                  <select
+                    className="w-full rounded-md border border-zinc-300 bg-white px-3 py-2 text-sm text-zinc-900 outline-none focus:ring-2 focus:ring-blue-600"
+                    value={it.regimen}
+                    onChange={(e) => actualizarItem(idx, "regimen", e.target.value)}
+                    required
+                  >
+                    <option value="">Seleccione...</option>
+                    <option value="Anual">Anual</option>
+                    <option value="1º Cuatr.">1º Cuatr.</option>
+                    <option value="2º Cuatr.">2º Cuatr.</option>
+                  </select>
+                  {erroresItems[idx]?.regimen && <p className="mt-1 text-xs text-red-600">{erroresItems[idx]?.regimen}</p>}
+                </div>
+                <div>
+                  <label className="mb-1 block text-sm font-medium">Cant. horas semanales sincrónicas</label>
+                  <input
+                    className="w-full rounded-md border border-zinc-300 bg-white px-3 py-2 text-sm text-zinc-900 placeholder:text-zinc-500 outline-none focus:ring-2 focus:ring-blue-600"
+                    placeholder="Ej: 4"
+                    value={it.horasSemanales}
+                    onChange={(e) => actualizarItem(idx, "horasSemanales", e.target.value)}
+                    required
+                  />
+                  {erroresItems[idx]?.horasSemanales && <p className="mt-1 text-xs text-red-600">{erroresItems[idx]?.horasSemanales}</p>}
+                </div>
+                <div>
+                  <label className="mb-1 block text-sm font-medium">Cant. total de horas sincrónicas</label>
+                  <input
+                    className="w-full rounded-md border border-zinc-300 bg-zinc-100 px-3 py-2 text-sm text-zinc-900 placeholder:text-zinc-500 outline-none"
+                    value={it.horasTotales}
+                    readOnly
+                  />
+                </div>
+                <div className="sm:col-span-2">
+                  <label className="mb-1 block text-sm font-medium">Bloque de conocimiento</label>
+                  <select
+                    className="w-full rounded-md border border-zinc-300 bg-white px-3 py-2 text-sm text-zinc-900 outline-none focus:ring-2 focus:ring-blue-600"
+                    value={it.bloqueConocimiento}
+                    onChange={(e) => actualizarItem(idx, "bloqueConocimiento", e.target.value)}
+                    required
+                  >
+                    <option value="">Seleccione...</option>
+                    <option value="Ciencias Básicas de la Ingeniería">Ciencias Básicas de la Ingeniería</option>
+                    <option value="Tecnologías Básicas">Tecnologías Básicas</option>
+                    <option value="Tecnologías Aplicadas">Tecnologías Aplicadas</option>
+                    <option value="Ciencias y Tecnologías Complementarias">Ciencias y Tecnologías Complementarias</option>
+                  </select>
+                  {erroresItems[idx]?.bloqueConocimiento && <p className="mt-1 text-xs text-red-600">{erroresItems[idx]?.bloqueConocimiento}</p>}
+                </div>
+                <div>
+                  <label className="mb-1 block text-sm font-medium">Coef. horas de trabajo independiente</label>
+                  <input
+                    className="w-full rounded-md border border-zinc-300 bg-zinc-100 px-3 py-2 text-sm text-zinc-900 placeholder:text-zinc-500 outline-none"
+                    value={it.coefHorasTI}
+                    readOnly
+                  />
+                </div>
+                <div>
+                  <label className="mb-1 block text-sm font-medium">Total horas de trabajo independiente</label>
+                  <input
+                    className="w-full rounded-md border border-zinc-300 bg-zinc-100 px-3 py-2 text-sm text-zinc-900 placeholder:text-zinc-500 outline-none"
+                    value={it.horasTITotales}
+                    readOnly
+                  />
+                </div>
+                <div>
+                  <label className="mb-1 block text-sm font-medium">Total horas de trabajo</label>
+                  <input
+                    className="w-full rounded-md border border-zinc-300 bg-zinc-100 px-3 py-2 text-sm text-zinc-900 placeholder:text-zinc-500 outline-none"
+                    value={it.horasTrabajoTotales}
+                    readOnly
+                  />
+                </div>
+                <div className="sm:col-span-4">
+                  <label className="mb-1 block text-sm font-medium">Asignaturas correlativas regularizadas</label>
+                  <select
+                    className="w-full rounded-md border border-zinc-300 bg-white px-3 py-2 text-sm text-zinc-900 outline-none focus:ring-2 focus:ring-blue-600"
+                    multiple
+                    size={4}
+                    value={it.correlativasRegularizadas}
+                    onChange={(e) => {
+                      const vals = Array.from((e.target as HTMLSelectElement).selectedOptions).map((o) => o.value);
+                      actualizarItem(idx, "correlativasRegularizadas", vals);
+                    }}
+                  >
+                    {items
+                      .filter((_, i2) => i2 !== idx)
+                      .filter((it2) => it2.codigo || it2.nombre)
+                      .map((it2, i2) => {
+                        const value = it2.codigo || it2.nombre;
+                        const label = it2.codigo ? `${it2.codigo} - ${it2.nombre}` : it2.nombre;
+                        return (
+                          <option key={`${i2}-${value}`} value={value || ""}>
+                            {label || "(Sin nombre)"}
+                          </option>
+                        );
+                      })}
+                  </select>
+                </div>
+                <div className="sm:col-span-4">
+                  <label className="mb-1 block text-sm font-medium">Asignaturas correlativas aprobadas</label>
+                  <select
+                    className="w-full rounded-md border border-zinc-300 bg-white px-3 py-2 text-sm text-zinc-900 outline-none focus:ring-2 focus:ring-blue-600"
+                    multiple
+                    size={4}
+                    value={it.correlativasAprobadas}
+                    onChange={(e) => {
+                      const vals = Array.from((e.target as HTMLSelectElement).selectedOptions).map((o) => o.value);
+                      actualizarItem(idx, "correlativasAprobadas", vals);
+                    }}
+                  >
+                    {items
+                      .filter((_, i2) => i2 !== idx)
+                      .filter((it2) => it2.codigo || it2.nombre)
+                      .map((it2, i2) => {
+                        const value = it2.codigo || it2.nombre;
+                        const label = it2.codigo ? `${it2.codigo} - ${it2.nombre}` : it2.nombre;
+                        return (
+                          <option key={`apr-${i2}-${value}`} value={value || ""}>
+                            {label || "(Sin nombre)"}
+                          </option>
+                        );
+                      })}
+                  </select>
                 </div>
                 <div className="sm:col-span-4 flex items-center justify-end gap-2">
                   {items.length > 1 && (

@@ -1,0 +1,1 @@
+alter table public.asignaturas add column if not exists coeficiente_horas_trabajo_independiente text;

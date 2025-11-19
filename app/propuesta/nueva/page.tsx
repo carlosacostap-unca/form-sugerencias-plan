@@ -24,10 +24,13 @@ type Propuesta = {
 type AsignaturaDB = {
   id: number;
   nombre: string;
+  codigo?: string | null;
   anio?: string | null;
   regimen?: string | null;
   horas_semanales?: string | null;
   horas_totales?: string | null;
+  horas_semanales_sincronicas?: string | null;
+  horas_totales_sincronicas?: string | null;
   objetivos?: string | null;
   contenidos_minimos?: string | null;
   formacion_practica?: string | null;
@@ -77,7 +80,7 @@ export default function NuevaPropuestaPage() {
     const fetchAsignaturas = async () => {
       try {
         const supabase = getSupabaseAnon();
-        const { data } = await supabase.from("asignaturas").select("id,nombre,anio,regimen,horas_semanales,horas_totales,objetivos,contenidos_minimos,formacion_practica,horas_formacion_practica").order("nombre");
+        const { data } = await supabase.from("asignaturas").select("id,nombre").order("nombre");
         setAsignaturas((data as AsignaturaDB[]) || []);
       } catch {}
     };
@@ -111,11 +114,26 @@ export default function NuevaPropuestaPage() {
     if (!n) return;
     const supabase = getSupabaseAnon();
     setCargandoAsignatura(true);
-    const { data, error } = await supabase
-      .from("asignaturas")
-      .select("id,anio,regimen,horas_semanales,horas_totales,objetivos,contenidos_minimos,formacion_practica,horas_formacion_practica")
-      .eq("nombre", n)
-      .single();
+    let data: any = null;
+    let error: any = null;
+    {
+      const res = await supabase
+        .from("asignaturas")
+        .select("id,anio,regimen,horas_semanales_sincronicas,horas_totales_sincronicas,objetivos,contenidos_minimos,formacion_practica,horas_formacion_practica")
+        .eq("nombre", n)
+        .single();
+      data = res.data;
+      error = res.error;
+    }
+    if (error) {
+      const res = await supabase
+        .from("asignaturas")
+        .select("id,anio,regimen,horas_semanales,horas_totales,objetivos,contenidos_minimos,formacion_practica,horas_formacion_practica")
+        .eq("nombre", n)
+        .single();
+      data = res.data;
+      error = res.error;
+    }
     if (!error && data) {
       const d = data as AsignaturaDB;
       const { data: corr } = await supabase
@@ -132,8 +150,8 @@ export default function NuevaPropuestaPage() {
         ...prev,
         anio: normalizarAnio(d.anio || ""),
         regimen: d.regimen || "",
-        horasSemanales: d.horas_semanales || "",
-        horasTotales: d.horas_totales || "",
+        horasSemanales: d.horas_semanales_sincronicas ?? d.horas_semanales ?? "",
+        horasTotales: d.horas_totales_sincronicas ?? d.horas_totales ?? "",
         correlativasRegularizadasIds: ids,
         correlativasAprobadasIds: idsAprob,
         objetivos: d.objetivos || "",
@@ -187,26 +205,56 @@ export default function NuevaPropuestaPage() {
       return (inserted as { id: number } | null)?.id ?? null;
     };
     const asignaturaId = await getAsignaturaId(p.asignatura);
-    const { data: propuestaRow, error: propuestaErr } = await supabase
-      .from("propuestas_plan")
-      .insert({
-        docente_id: docenteId,
-        asignatura_id: asignaturaId,
-        nombre_asignatura: p.nombreAsignatura || null,
-        anio: p.anio || null,
-        regimen: p.regimen || null,
-        horas_semanales: p.horasSemanales || null,
-        horas_totales: p.horasTotales || null,
-        competencias_genericas: p.competenciasGenericas ?? [],
-        competencias_especificas: p.competenciasEspecificas ?? [],
-        objetivos: p.objetivos || null,
-        contenidos_minimos: p.contenidosMinimos || null,
-        formacion_practica: p.formacionPractica || null,
-        horas_formacion_practica: p.horasFormacionPractica || null,
-        comentarios: p.comentarios || null,
-      })
-      .select()
-      .single();
+    let propuestaRow: unknown = null;
+    let propuestaErr: { message: string } | null = null;
+    {
+      const res1 = await supabase
+        .from("propuestas_plan")
+        .insert({
+          docente_id: docenteId,
+          asignatura_id: asignaturaId,
+          nombre_asignatura: p.nombreAsignatura || null,
+          anio: p.anio || null,
+          regimen: p.regimen || null,
+          horas_semanales: p.horasSemanales || null,
+          horas_totales: p.horasTotales || null,
+          competencias_genericas: p.competenciasGenericas ?? [],
+          competencias_especificas: p.competenciasEspecificas ?? [],
+          objetivos: p.objetivos || null,
+          contenidos_minimos: p.contenidosMinimos || null,
+          formacion_practica: p.formacionPractica || null,
+          horas_formacion_practica: p.horasFormacionPractica || null,
+          comentarios: p.comentarios || null,
+        })
+        .select()
+        .single();
+      propuestaRow = res1.data;
+      propuestaErr = res1.error as { message: string } | null;
+    }
+    if (propuestaErr) {
+      const res2 = await supabase
+        .from("propuestas_plan")
+        .insert({
+          docente_id: docenteId,
+          asignatura_id: asignaturaId,
+          nombre_asignatura: p.nombreAsignatura || null,
+          anio: p.anio || null,
+          regimen: p.regimen || null,
+          horas_semanales_sincronicas: p.horasSemanales || null,
+          horas_totales_sincronicas: p.horasTotales || null,
+          competencias_genericas: p.competenciasGenericas ?? [],
+          competencias_especificas: p.competenciasEspecificas ?? [],
+          objetivos: p.objetivos || null,
+          contenidos_minimos: p.contenidosMinimos || null,
+          formacion_practica: p.formacionPractica || null,
+          horas_formacion_practica: p.horasFormacionPractica || null,
+          comentarios: p.comentarios || null,
+        })
+        .select()
+        .single();
+      propuestaRow = res2.data;
+      propuestaErr = res2.error as { message: string } | null;
+    }
     if (propuestaErr) {
       alert(propuestaErr.message);
       setEnviando(false);

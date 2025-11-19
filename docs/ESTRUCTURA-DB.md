@@ -5,13 +5,6 @@ CREATE TABLE public.alternativas_planes (
   id bigint GENERATED ALWAYS AS IDENTITY NOT NULL,
   titulo text NOT NULL,
   fecha_hora timestamp with time zone NOT NULL,
-  regimen text,
-  horas_semanales text,
-  horas_totales text,
-  bloques_conocimiento text,
-  coeficiente_horas_trabajo_independiente text,
-  horas_trabajo_independiente_totales text,
-  horas_trabajo_totales text,
   created_at timestamp with time zone NOT NULL DEFAULT now(),
   CONSTRAINT alternativas_planes_pkey PRIMARY KEY (id)
 );
@@ -22,6 +15,13 @@ CREATE TABLE public.alternativas_planes_asignaturas (
   codigo text,
   nombre text NOT NULL,
   created_at timestamp with time zone NOT NULL DEFAULT now(),
+  regimen text,
+  horas_semanales text,
+  horas_totales text,
+  bloque_conocimiento text,
+  coeficiente_horas_trabajo_independiente text,
+  horas_trabajo_independiente_totales text,
+  horas_trabajo_totales text,
   CONSTRAINT alternativas_planes_asignaturas_pkey PRIMARY KEY (id),
   CONSTRAINT alternativas_planes_asignaturas_alternativa_id_fkey FOREIGN KEY (alternativa_id) REFERENCES public.alternativas_planes(id)
 );
@@ -82,7 +82,16 @@ CREATE TABLE public.asignaturas (
   contenidos_minimos text,
   formacion_practica text,
   horas_formacion_practica text,
-  CONSTRAINT asignaturas_pkey PRIMARY KEY (id)
+  codigo text,
+  bloque_conocimiento_id bigint,
+  CONSTRAINT asignaturas_pkey PRIMARY KEY (id),
+  CONSTRAINT asignaturas_bloque_conocimiento_id_fkey FOREIGN KEY (bloque_conocimiento_id) REFERENCES public.bloques_conocimiento(id)
+);
+CREATE TABLE public.bloques_conocimiento (
+  id bigint GENERATED ALWAYS AS IDENTITY NOT NULL,
+  nombre text NOT NULL UNIQUE,
+  created_at timestamp with time zone NOT NULL DEFAULT now(),
+  CONSTRAINT bloques_conocimiento_pkey PRIMARY KEY (id)
 );
 CREATE TABLE public.competencias_especificas (
   id bigint GENERATED ALWAYS AS IDENTITY NOT NULL,
