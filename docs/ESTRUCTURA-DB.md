@@ -70,28 +70,66 @@ CREATE TABLE public.asignatura_correlativas_regularizadas (
   CONSTRAINT asignatura_correlativas_regularizadas_asignatura_id_fkey FOREIGN KEY (asignatura_id) REFERENCES public.asignaturas(id),
   CONSTRAINT asignatura_correlativas_regularizadas_correlativa_id_fkey FOREIGN KEY (correlativa_id) REFERENCES public.asignaturas(id)
 );
+CREATE TABLE public.asignatura_descriptores (
+  id bigint GENERATED ALWAYS AS IDENTITY NOT NULL,
+  asignatura_id bigint NOT NULL,
+  descriptor_id bigint NOT NULL,
+  created_at timestamp with time zone NOT NULL DEFAULT now(),
+  CONSTRAINT asignatura_descriptores_pkey PRIMARY KEY (id),
+  CONSTRAINT asignatura_descriptores_asignatura_id_fkey FOREIGN KEY (asignatura_id) REFERENCES public.asignaturas(id),
+  CONSTRAINT asignatura_descriptores_descriptor_id_fkey FOREIGN KEY (descriptor_id) REFERENCES public.bloque_descriptores(id)
+);
 CREATE TABLE public.asignaturas (
   id bigint GENERATED ALWAYS AS IDENTITY NOT NULL,
   nombre text NOT NULL UNIQUE,
   created_at timestamp with time zone NOT NULL DEFAULT now(),
   anio text,
   regimen text,
-  horas_semanales text,
-  horas_totales text,
+  horas_semanales_sincronicas text,
+  horas_totales_sincronicas text,
   objetivos text,
   contenidos_minimos text,
   formacion_practica text,
   horas_formacion_practica text,
   codigo text,
   bloque_conocimiento_id bigint,
+  horas_trabajo_independiente_totales text,
+  horas_trabajo_totales text,
+  coeficiente_horas_trabajo_independiente text,
   CONSTRAINT asignaturas_pkey PRIMARY KEY (id),
   CONSTRAINT asignaturas_bloque_conocimiento_id_fkey FOREIGN KEY (bloque_conocimiento_id) REFERENCES public.bloques_conocimiento(id)
+);
+CREATE TABLE public.asignaturas_optativas (
+  id bigint GENERATED ALWAYS AS IDENTITY NOT NULL,
+  nombre text NOT NULL UNIQUE,
+  objetivos text,
+  contenidos_minimos text,
+  formacion_practica text,
+  created_at timestamp with time zone NOT NULL DEFAULT now(),
+  CONSTRAINT asignaturas_optativas_pkey PRIMARY KEY (id)
+);
+CREATE TABLE public.bloque_descriptores (
+  id bigint GENERATED ALWAYS AS IDENTITY NOT NULL,
+  nombre text NOT NULL UNIQUE,
+  created_at timestamp with time zone NOT NULL DEFAULT now(),
+  transversal boolean,
+  CONSTRAINT bloque_descriptores_pkey PRIMARY KEY (id)
 );
 CREATE TABLE public.bloques_conocimiento (
   id bigint GENERATED ALWAYS AS IDENTITY NOT NULL,
   nombre text NOT NULL UNIQUE,
   created_at timestamp with time zone NOT NULL DEFAULT now(),
+  horas_minimas numeric,
   CONSTRAINT bloques_conocimiento_pkey PRIMARY KEY (id)
+);
+CREATE TABLE public.bloques_conocimiento_descriptores (
+  id bigint GENERATED ALWAYS AS IDENTITY NOT NULL,
+  bloque_conocimiento_id bigint NOT NULL,
+  descriptor_id bigint NOT NULL,
+  created_at timestamp with time zone NOT NULL DEFAULT now(),
+  CONSTRAINT bloques_conocimiento_descriptores_pkey PRIMARY KEY (id),
+  CONSTRAINT bloques_conocimiento_descriptores_bloque_conocimiento_id_fkey FOREIGN KEY (bloque_conocimiento_id) REFERENCES public.bloques_conocimiento(id),
+  CONSTRAINT bloques_conocimiento_descriptores_descriptor_id_fkey FOREIGN KEY (descriptor_id) REFERENCES public.bloque_descriptores(id)
 );
 CREATE TABLE public.competencias_especificas (
   id bigint GENERATED ALWAYS AS IDENTITY NOT NULL,

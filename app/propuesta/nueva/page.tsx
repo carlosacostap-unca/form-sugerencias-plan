@@ -35,6 +35,10 @@ type AsignaturaDB = {
   contenidos_minimos?: string | null;
   formacion_practica?: string | null;
   horas_formacion_practica?: string | null;
+  coeficiente_horas_trabajo_independiente?: string | null;
+  horas_trabajo_independiente_totales?: string | null;
+  horas_trabajo_totales?: string | null;
+  bloque_conocimiento_id?: number | null;
 };
 
 const ANIOS = ["Seleccione...", "1º", "2º", "3º", "4º", "5º"];
@@ -68,6 +72,10 @@ export default function NuevaPropuestaPage() {
   const [nombre, setNombre] = useState("");
   const [apellido, setApellido] = useState("");
   const [asignaturas, setAsignaturas] = useState<AsignaturaDB[]>([]);
+  const [gridAsignaturas, setGridAsignaturas] = useState<AsignaturaDB[]>([]);
+  const [bloqueNames, setBloqueNames] = useState<Record<number, string>>({});
+  const [corrRegs, setCorrRegs] = useState<Record<number, number[]>>({});
+  const [corrAprs, setCorrAprs] = useState<Record<number, number[]>>({});
   const [p, setP] = useState<Propuesta>(nuevaPropuesta());
   const [errores, setErrores] = useState<{ docente?: { nombre?: string; apellido?: string }; propuesta?: { asignatura?: string; competenciasGenericas?: string; competenciasEspecificas?: string } }>({});
   const [enviando, setEnviando] = useState(false);
@@ -84,6 +92,55 @@ export default function NuevaPropuestaPage() {
         setAsignaturas((data as AsignaturaDB[]) || []);
       } catch {}
     };
+    const fetchGridData = async () => {
+      try {
+        const supabase = getSupabaseAnon();
+        let d1: any[] | null = null;
+        {
+          const { data, error } = await supabase
+            .from("asignaturas")
+            .select(
+              "id,anio,codigo,nombre,regimen,horas_semanales_sincronicas,horas_totales_sincronicas,coeficiente_horas_trabajo_independiente,horas_trabajo_independiente_totales,horas_trabajo_totales,bloque_conocimiento_id"
+            )
+            .order("anio");
+          if (!error) d1 = (data as any[]) || [];
+        }
+        if (!d1) {
+          const { data } = await supabase
+            .from("asignaturas")
+            .select("id,anio,codigo,nombre,regimen,horas_semanales,horas_totales,coeficiente_horas_trabajo_independiente,bloque_conocimiento_id")
+            .order("anio");
+          d1 = (data as any[]) || [];
+        }
+        const byIdName: Record<number, { nombre: string; codigo: string | null }> = {};
+        for (const r of d1) byIdName[r.id] = { nombre: r.nombre, codigo: r.codigo ?? null };
+        const { data: regs } = await supabase.from("asignatura_correlativas_regularizadas").select("asignatura_id,correlativa_id");
+        const { data: aprs } = await supabase.from("asignatura_correlativas_aprobadas").select("asignatura_id,correlativa_id");
+        const mapRegs: Record<number, number[]> = {};
+        const mapAprs: Record<number, number[]> = {};
+        for (const r of (regs as any[]) || []) {
+          mapRegs[r.asignatura_id] = [...(mapRegs[r.asignatura_id] || []), r.correlativa_id];
+        }
+        for (const r of (aprs as any[]) || []) {
+          mapAprs[r.asignatura_id] = [...(mapAprs[r.asignatura_id] || []), r.correlativa_id];
+        }
+        const { data: bloques } = await supabase.from("bloques_conocimiento").select("id,nombre");
+        const bnames: Record<number, string> = {};
+        for (const b of (bloques as any[]) || []) bnames[b.id] = b.nombre as string;
+        setBloqueNames(bnames);
+        setCorrRegs(mapRegs);
+        setCorrAprs(mapAprs);
+        const enriched = (d1 || []).map((x) => {
+          const hsSem = x.horas_semanales_sincronicas ?? x.horas_semanales ?? null;
+          const hsTot = x.horas_totales_sincronicas ?? x.horas_totales ?? null;
+          const coef = x.coeficiente_horas_trabajo_independiente ?? null;
+          const tiTot = x.horas_trabajo_independiente_totales ?? (coef && hsTot ? String(Number(coef) * Number(hsTot)) : null);
+          const trabTot = x.horas_trabajo_totales ?? (hsTot && tiTot ? String(Number(hsTot) + Number(tiTot)) : null);
+          return { ...x, horas_semanales_sincronicas: hsSem, horas_totales_sincronicas: hsTot, horas_trabajo_independiente_totales: tiTot, horas_trabajo_totales: trabTot } as AsignaturaDB;
+        });
+        setGridAsignaturas(enriched);
+      } catch {}
+    };
     const fetchCompetencias = async () => {
       try {
         const supabase = getSupabaseAnon();
@@ -96,6 +153,7 @@ export default function NuevaPropuestaPage() {
       } catch {}
     };
     fetchAsignaturas();
+    fetchGridData();
     fetchCompetencias();
   }, []);
 
@@ -521,6 +579,7 @@ export default function NuevaPropuestaPage() {
             <button className="rounded-md bg-green-600 px-6 py-3 text-sm font-semibold text-white hover:bg-green-700 disabled:cursor-not-allowed disabled:opacity-50" disabled={enviando} onClick={enviar}>{enviando ? "Enviando..." : "Enviar propuesta"}</button>
           </div>
         </section>
+
       </div>
     </div>
   );

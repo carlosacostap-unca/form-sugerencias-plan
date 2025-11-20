@@ -35,6 +35,7 @@ export async function POST(req: Request) {
   const aprs: number[] | undefined = Array.isArray(b?.correlativas_aprobadas_ids) ? b.correlativas_aprobadas_ids : undefined;
   const gens: number[] | undefined = Array.isArray(b?.competencias_genericas_ids) ? b.competencias_genericas_ids : undefined;
   const esps: number[] | undefined = Array.isArray(b?.competencias_especificas_ids) ? b.competencias_especificas_ids : undefined;
+  const descs: number[] | undefined = Array.isArray(b?.descriptores_ids) ? b.descriptores_ids : undefined;
 
   if (regs) {
     await supabase.from("asignatura_correlativas_regularizadas").delete().eq("asignatura_id", id);
@@ -62,6 +63,13 @@ export async function POST(req: Request) {
     if (esps.length) {
       const rows = esps.map((competencia_especifica_id) => ({ asignatura_id: id, competencia_especifica_id }));
       await supabase.from("asignatura_competencias_especificas").insert(rows);
+    }
+  }
+  if (descs) {
+    await supabase.from("asignatura_descriptores").delete().eq("asignatura_id", id);
+    if (descs.length) {
+      const rows = descs.map((descriptor_id) => ({ asignatura_id: id, descriptor_id }));
+      await supabase.from("asignatura_descriptores").insert(rows);
     }
   }
 
