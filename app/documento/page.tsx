@@ -628,10 +628,15 @@ export default function DocumentoPage() {
             const sections = blocksWithItems.map((bid) => {
               const nombreBloque = bloqueNames[bid];
               const items = [...(byBlock[bid] || [])].sort((a, b) => (a.nombre || "").localeCompare(b.nombre || "", "es", { sensitivity: "base" }));
-              const rows = items.flatMap((x) => {
+              const rows = items.map((x) => {
                 const descIds = descMap[x.id] || [];
                 const descList = descIds
                   .map((id) => descNames[id])
+                  .filter(Boolean)
+                  .sort((a, b) => (a || "").localeCompare(b || "", "es", { sensitivity: "base" }));
+                const ejeIds = ejeMap[x.id] || [];
+                const ejeList = ejeIds
+                  .map((id) => ejeNames[id])
                   .filter(Boolean)
                   .sort((a, b) => (a || "").localeCompare(b || "", "es", { sensitivity: "base" }));
                 const hsSem = Number(x.horas_semanales_sincronicas || 0) || 0;
@@ -639,10 +644,7 @@ export default function DocumentoPage() {
                 const calcTot = hsSem && factor ? hsSem * factor : 0;
                 const hsTot = Number(x.horas_totales_sincronicas || calcTot || 0) || 0;
                 const hsMin = null;
-                if (descList.length === 0) {
-                  return [{ nombre: x.nombre, descriptor: "-", hsMin, hsTot, first: true, span: 1 }];
-                }
-                return descList.map((d, i) => ({ nombre: x.nombre, descriptor: d as string, hsMin, hsTot, first: i === 0, span: descList.length }));
+                return { nombre: x.nombre, descriptores: descList, ejes: ejeList, hsMin, hsTot };
               });
               const totalOfrecidas = items.reduce((a, x) => {
                 const hsSem = Number(x.horas_semanales_sincronicas || 0) || 0;
@@ -657,17 +659,19 @@ export default function DocumentoPage() {
                   <div className="overflow-x-auto">
                     <table className="min-w-full table-fixed border border-zinc-300 text-sm">
                       <colgroup>
+                        <col style={{ width: "15%" }} />
                         <col style={{ width: "20%" }} />
                         <col style={{ width: "25%" }} />
-                        <col style={{ width: "35%" }} />
-                        <col style={{ width: "10%" }} />
-                        <col style={{ width: "10%" }} />
+                        <col style={{ width: "30%" }} />
+                        <col style={{ width: "5%" }} />
+                        <col style={{ width: "5%" }} />
                       </colgroup>
                       <thead>
                         <tr className="bg-zinc-100">
                           <th className="border border-zinc-300 px-2 py-1 text-center">Bloque de Conocimiento</th>
                           <th className="border border-zinc-300 px-2 py-1 text-center">Asignatura</th>
                           <th className="border border-zinc-300 px-2 py-1 text-center">Descriptores</th>
+                          <th className="border border-zinc-300 px-2 py-1 text-center">Ejes transversales de formación</th>
                           <th className="border border-zinc-300 px-2 py-1 text-center">Hs. Min.</th>
                           <th className="border border-zinc-300 px-2 py-1 text-center">Hs. Ofrecidas</th>
                         </tr>
@@ -678,20 +682,35 @@ export default function DocumentoPage() {
                             {idx === 0 ? (
                               <td className="border border-zinc-300 px-2 py-1 align-top text-left" rowSpan={rows.length + 1}>{nombreBloque}</td>
                             ) : null}
-                            {r.first ? (
-                              <td className="border border-zinc-300 px-2 py-1 text-left" rowSpan={r.span}>{r.nombre}</td>
-                            ) : null}
-                            <td className={`border border-zinc-300 px-2 py-1 ${r.descriptor === "-" ? "text-center" : "text-left"}`}>{r.descriptor}</td>
-                            {r.first ? (
-                              <td className="border border-zinc-300 px-2 py-1 text-center" rowSpan={r.span}>{fmt(r.hsMin)}</td>
-                            ) : null}
-                            {r.first ? (
-                              <td className="border border-zinc-300 px-2 py-1 text-center" rowSpan={r.span}>{fmt(r.hsTot)}</td>
-                            ) : null}
+                            <td className="border border-zinc-300 px-2 py-1 text-left">{r.nombre}</td>
+                            <td className="border border-zinc-300 px-2 py-1 align-top text-left">
+                              {r.descriptores.length ? (
+                                <ul className="list-disc pl-6">
+                                  {r.descriptores.map((d, i) => (
+                                    <li key={`desc-${bid}-${idx}-${i}`}>{d}</li>
+                                  ))}
+                                </ul>
+                              ) : (
+                                <span>-</span>
+                              )}
+                            </td>
+                            <td className="border border-zinc-300 px-2 py-1 align-top text-left">
+                              {r.ejes.length ? (
+                                <ul className="list-disc pl-6">
+                                  {r.ejes.map((d, i) => (
+                                    <li key={`eje-${bid}-${idx}-${i}`}>{d}</li>
+                                  ))}
+                                </ul>
+                              ) : (
+                                <span>-</span>
+                              )}
+                            </td>
+                            <td className="border border-zinc-300 px-2 py-1 text-center">{fmt(r.hsMin)}</td>
+                            <td className="border border-zinc-300 px-2 py-1 text-center">{fmt(r.hsTot)}</td>
                           </tr>
                         ))}
                         <tr className="bg-zinc-50 font-medium">
-                          <td className="border border-zinc-300 px-2 py-1" colSpan={2}>TOTAL DE {nombreBloque?.toUpperCase?.() || ""}</td>
+                          <td className="border border-zinc-300 px-2 py-1" colSpan={3}>TOTAL DE {nombreBloque?.toUpperCase?.() || ""}</td>
                           <td className="border border-zinc-300 px-2 py-1 text-center">{fmt(totalMin)}</td>
                           <td className="border border-zinc-300 px-2 py-1 text-center">{fmt(totalOfrecidas)}</td>
                         </tr>
