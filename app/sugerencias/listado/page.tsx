@@ -1,11 +1,13 @@
 "use client";
 import { useEffect, useMemo, useState } from "react";
+import { useRouter } from "next/navigation";
 import { getSupabaseAnon } from "../../../lib/supabase";
 
 type Sugerencia = { id: number; docente_id: number | null; seccion: string; detalle: string; created_at: string };
 type Docente = { id: number; nombre: string; apellido: string };
 
 export default function ListadoSugerenciasPage() {
+  const router = useRouter();
   const [items, setItems] = useState<Sugerencia[]>([]);
   const [docentes, setDocentes] = useState<Record<number, Docente>>({});
   const [loading, setLoading] = useState(true);
@@ -99,39 +101,31 @@ export default function ListadoSugerenciasPage() {
           </div>
         </section>
 
-        <section className="mt-6 rounded-xl bg-white p-6 text-zinc-900 shadow">
+        <section className="mt-6 space-y-4">
           {loading ? (
             <div className="rounded-xl border border-blue-300 bg-blue-50 p-4 text-blue-700">Cargando sugerencias...</div>
           ) : filtered.length === 0 ? (
-            <div className="text-sm text-zinc-500">No hay sugerencias que coincidan con los filtros.</div>
+            <div className="rounded-xl border border-zinc-300 bg-white p-6 text-sm text-zinc-500 shadow">No hay sugerencias que coincidan con los filtros.</div>
           ) : (
-            <div className="overflow-x-auto">
-              <table className="min-w-full border border-zinc-300 text-sm">
-                <thead>
-                  <tr className="bg-zinc-100">
-                    <th className="border border-zinc-300 px-2 py-1 text-left">Fecha</th>
-                    <th className="border border-zinc-300 px-2 py-1 text-left">Aportante</th>
-                    <th className="border border-zinc-300 px-2 py-1 text-left">Sección</th>
-                    <th className="border border-zinc-300 px-2 py-1 text-left">Detalle</th>
-                  </tr>
-                </thead>
-                <tbody>
-                  {filtered.map((r) => {
-                    const d = r.docente_id ? docentes[r.docente_id] : undefined;
-                    const nombre = d ? `${d.apellido}, ${d.nombre}` : "-";
-                    const fecha = new Date(r.created_at).toLocaleString();
-                    return (
-                      <tr key={`row-${r.id}`}>
-                        <td className="border border-zinc-300 px-2 py-1 align-top text-left">{fecha}</td>
-                        <td className="border border-zinc-300 px-2 py-1 align-top text-left">{nombre}</td>
-                        <td className="border border-zinc-300 px-2 py-1 align-top text-left">{r.seccion}</td>
-                        <td className="border border-zinc-300 px-2 py-1 align-top text-left whitespace-pre-wrap">{r.detalle}</td>
-                      </tr>
-                    );
-                  })}
-                </tbody>
-              </table>
-            </div>
+            filtered.map((r) => {
+              const d = r.docente_id ? docentes[r.docente_id] : undefined;
+              const nombre = d ? `${d.apellido}, ${d.nombre}` : "-";
+              const fecha = new Date(r.created_at).toLocaleString();
+              return (
+                <button
+                  key={`card-${r.id}`}
+                  className="block w-full rounded-xl border border-zinc-300 bg-white p-5 text-left shadow hover:border-blue-400 hover:shadow-md focus:outline-none focus:ring-2 focus:ring-blue-600"
+                  onClick={() => router.push(`/sugerencias/${r.id}`)}
+               >
+                  <div className="flex items-start justify-between">
+                    <div className="text-sm text-zinc-600">{fecha}</div>
+                    <div className="text-xs rounded bg-blue-100 px-2 py-0.5 text-blue-800">{r.seccion}</div>
+                  </div>
+                  <div className="mt-1 text-sm font-medium text-zinc-900">{nombre}</div>
+                  <div className="mt-2 whitespace-pre-wrap text-sm text-zinc-800">{r.detalle}</div>
+                </button>
+              );
+            })
           )}
         </section>
       </div>
