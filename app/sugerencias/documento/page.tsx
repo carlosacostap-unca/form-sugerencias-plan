@@ -121,7 +121,7 @@ function SugerenciasDocumentoInner() {
             </div>
           </div>
           <div className="mt-6 flex items-center gap-3">
-            <button className="rounded-md bg-zinc-200 px-4 py-2 text-sm font-medium text-zinc-900 hover:bg-zinc-300" onClick={() => router.push("/")}>Cancelar</button>
+            <button className="rounded-md bg-zinc-200 px-4 py-2 text-sm font-medium text-zinc-900 hover:bg-zinc-300" onClick={() => router.push("/documento")}>Cancelar</button>
             <button className="rounded-md bg-green-600 px-6 py-3 text-sm font-semibold text-white hover:bg-green-700 disabled:cursor-not-allowed disabled:opacity-50" disabled={enviando} onClick={enviar}>{enviando ? "Enviando..." : "Enviar sugerencia"}</button>
           </div>
         </section>
