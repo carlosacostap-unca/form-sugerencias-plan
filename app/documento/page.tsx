@@ -177,6 +177,7 @@ export default function DocumentoPage() {
       <div ref={docRef}>
       <div className="mx-auto w-full max-w-6xl rounded-xl bg-white p-10 shadow">
         <h1 className="mb-6 text-3xl font-semibold">Proyecto Ordenanza</h1>
+        <div className="-mt-4 mb-4"><a className="text-sm text-blue-700 hover:underline" href={`/sugerencias/documento?seccion=${encodeURIComponent("Proyecto Ordenanza")}`}>Sugerir cambios en esta sección</a></div>
         <div className="mb-8 text-right text-sm tracking-wide">{fecha}</div>
 
         <div className="space-y-4 text-justify leading-relaxed">

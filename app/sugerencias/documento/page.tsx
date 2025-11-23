@@ -4,6 +4,7 @@ import { useRouter, useSearchParams } from "next/navigation";
 import { getSupabaseAnon } from "../../../lib/supabase";
 
 const SECCIONES = [
+  "Proyecto Ordenanza",
   "Fundamentación de la propuesta",
   "Objetivos del Proyecto",
   "Identificación del Plan de estudio",
