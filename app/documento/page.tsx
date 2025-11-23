@@ -230,6 +230,7 @@ export default function DocumentoPage() {
           <div>Ingeniería informática</div>
         </div>
         <h2 className="mt-6 text-2xl font-semibold">Fundamentación de la propuesta</h2>
+        <div className="mt-1"><a className="text-sm text-blue-700 hover:underline" href={`/sugerencias/documento?seccion=${encodeURIComponent("Fundamentación de la propuesta")}`}>Sugerir cambios en esta sección</a></div>
         <div className="mt-4 space-y-4 text-justify leading-relaxed">
           <p>
             El presente Plan de Estudios de la carrera Ingeniería en Informática de la Universidad Nacional de Catamarca surge como resultado de un proceso de autoevaluación y revisión crítica del diseño curricular vigente (Plan 2011), llevado adelante por el Departamento de Informática, debido a la rápida evolución de la disciplina y a la obsolescencia de conocimientos que obliga a implementar acciones sistemáticas para asegurar la pertinencia y calidad de la formación profesional, en consonancia con las necesidades de la región.
@@ -251,6 +252,7 @@ export default function DocumentoPage() {
           </p>
         </div>
         <h2 className="mt-8 text-2xl font-semibold">Objetivos del Proyecto</h2>
+        <div className="mt-1"><a className="text-sm text-blue-700 hover:underline" href={`/sugerencias/documento?seccion=${encodeURIComponent("Objetivos del Proyecto")}`}>Sugerir cambios en esta sección</a></div>
         <div className="mt-4 space-y-4 text-justify leading-relaxed">
           <p>
             El Proyecto de Innovación Curricular surge de la necesidad de actualizar el diseño curricular vigente (Plan 2011), con el fin de alcanzar los siguientes objetivos clave:
@@ -270,6 +272,7 @@ export default function DocumentoPage() {
       </div>
       <div className="mx-auto mt-12 w-full max-w-6xl rounded-xl bg-white p-10 shadow">
         <h2 className="text-2xl font-semibold">Identificación del Plan de estudio</h2>
+        <div className="mt-1"><a className="text-sm text-blue-700 hover:underline" href={`/sugerencias/documento?seccion=${encodeURIComponent("Identificación del Plan de estudio")}`}>Sugerir cambios en esta sección</a></div>
         <h3 className="mt-8 text-xl font-semibold">1. Denominación: <span className="font-normal">INGENIERÍA EN INFORMÁTICA</span></h3>
         <h3 className="mt-8 text-xl font-semibold">2. Título que otorga: <span className="font-normal">INGENIERO/A EN INFORMÁTICA</span></h3>
         <h3 className="mt-8 text-xl font-semibold">3. Tipo de carrera: <span className="font-normal">Grado</span></h3>
@@ -420,6 +423,7 @@ export default function DocumentoPage() {
       </div>
       <div className="mx-auto mt-12 w-full max-w-6xl rounded-xl bg-white p-10 shadow">
         <h2 className="text-2xl font-semibold">Anexo I: Plan de Estudio</h2>
+        <div className="mt-1"><a className="text-sm text-blue-700 hover:underline" href={`/sugerencias/documento?seccion=${encodeURIComponent("Anexo I: Plan de Estudio")}`}>Sugerir cambios en esta sección</a></div>
         <div className="mt-4 space-y-8">
           {["1º", "2º", "3º", "4º", "5º"].map((anioLabel) => {
             const items = asignaturas.filter((x) => (x.anio || "") === anioLabel);
@@ -606,6 +610,7 @@ export default function DocumentoPage() {
       </div>
       <div className="mx-auto mt-12 w-full max-w-6xl rounded-xl bg-white p-10 shadow">
         <h2 className="text-xl font-semibold">Anexo II: Núcleos temáticos agrupados por Bloques de Conocimiento, sobre la base de lo establecido en la Resol-2025-982-APN-SE#MCH de la Secretaría de Educación</h2>
+        <div className="mt-1"><a className="text-sm text-blue-700 hover:underline" href={`/sugerencias/documento?seccion=${encodeURIComponent("Anexo II: Núcleos temáticos agrupados por Bloques de Conocimiento, sobre la base de lo establecido en la Resol-2025-982-APN-SE#MCH de la Secretaría de Educación")}`}>Sugerir cambios en esta sección</a></div>
         <div className="mt-4 space-y-8">
           {(() => {
             const blockIds = Object.keys(bloqueNames).map((x) => Number(x));
@@ -823,6 +828,7 @@ export default function DocumentoPage() {
       </div>
       <div className="mx-auto mt-12 w-full max-w-6xl rounded-xl bg-white p-10 shadow">
         <h2 className="text-xl font-semibold">Anexo III: Criterios de intensidad de la Formación Práctica según lo establecido en la Resol-2025-982-APN-SE#MCH de la Secretaría de Educación</h2>
+        <div className="mt-1"><a className="text-sm text-blue-700 hover:underline" href={`/sugerencias/documento?seccion=${encodeURIComponent("Anexo III: Criterios de intensidad de la Formación Práctica según lo establecido en la Resol-2025-982-APN-SE#MCH de la Secretaría de Educación")}`}>Sugerir cambios en esta sección</a></div>
         <div className="mt-4 space-y-8">
           {(() => {
             const blockIds = Object.keys(bloqueNames).map((x) => Number(x));
@@ -936,6 +942,7 @@ export default function DocumentoPage() {
       </div>
       <div className="mx-auto mt-12 w-full max-w-6xl rounded-xl bg-white p-10 shadow">
         <h2 className="text-xl font-semibold">Anexo IV: Programas Sintéticos</h2>
+        <div className="mt-1"><a className="text-sm text-blue-700 hover:underline" href={`/sugerencias/documento?seccion=${encodeURIComponent("Anexo IV: Programas Sintéticos")}`}>Sugerir cambios en esta sección</a></div>
         <div className="mt-4 space-y-8">
           {(() => {
             const fmt = (v: number | string | null | undefined) => {
@@ -1092,6 +1099,7 @@ export default function DocumentoPage() {
       </div>
       <div className="mx-auto mt-12 w-full max-w-6xl rounded-xl bg-white p-10 shadow">
         <h2 className="text-xl font-semibold">Anexo V: Oferta de Asignaturas Optativas</h2>
+        <div className="mt-1"><a className="text-sm text-blue-700 hover:underline" href={`/sugerencias/documento?seccion=${encodeURIComponent("Anexo V: Oferta de Asignaturas Optativas")}`}>Sugerir cambios en esta sección</a></div>
         <div className="mt-4 space-y-8">
           {optativas.length === 0 ? (
             <div className="text-sm text-zinc-500">No hay asignaturas optativas cargadas.</div>
@@ -1146,6 +1154,7 @@ export default function DocumentoPage() {
       </div>
       <div className="mx-auto mt-12 w-full max-w-6xl rounded-xl bg-white p-10 shadow">
         <h2 className="text-xl font-semibold">Anexo VI: Equivalencias entre Plan 2026 y Plan 2011</h2>
+        <div className="mt-1"><a className="text-sm text-blue-700 hover:underline" href={`/sugerencias/documento?seccion=${encodeURIComponent("Anexo VI: Equivalencias entre Plan 2026 y Plan 2011")}`}>Sugerir cambios en esta sección</a></div>
         <div className="mt-4 overflow-x-auto">
           <table className="min-w-full table-fixed border border-zinc-300 text-sm">
             <colgroup>
