@@ -1,5 +1,5 @@
 "use client";
-import { useMemo, useState } from "react";
+import { Suspense, useMemo, useState } from "react";
 import { useRouter, useSearchParams } from "next/navigation";
 import { getSupabaseAnon } from "../../../lib/supabase";
 
@@ -15,7 +15,7 @@ const SECCIONES = [
   "Anexo VI: Equivalencias entre Plan 2026 y Plan 2011",
 ];
 
-export default function SugerenciasDocumentoPage() {
+function SugerenciasDocumentoInner() {
   const router = useRouter();
   const params = useSearchParams();
   const qSec = params?.get("seccion") || "";
@@ -127,5 +127,13 @@ export default function SugerenciasDocumentoPage() {
         </section>
       </div>
     </div>
+  );
+}
+
+export default function SugerenciasDocumentoPage() {
+  return (
+    <Suspense fallback={<div className="min-h-screen w-full bg-zinc-100"><div className="mx-auto max-w-5xl px-4 py-10"><div className="rounded-xl border border-zinc-300 bg-white p-6 text-sm text-zinc-700 shadow">Cargando sugerencias…</div></div></div>}>
+      <SugerenciasDocumentoInner />
+    </Suspense>
   );
 }
