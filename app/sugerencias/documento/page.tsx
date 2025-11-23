@@ -57,8 +57,7 @@ function SugerenciasDocumentoInner() {
       return;
     }
     const docenteId = (docenteRow as { id: number }).id;
-    const tema = `documento:${seccion}`;
-    const { error: apErr } = await supabase.from("aportes_generales").insert({ docente_id: docenteId, tema, detalle });
+    const { error: apErr } = await supabase.from("sugerencias_documento").insert({ docente_id: docenteId, seccion, detalle });
     if (apErr) {
       alert(apErr.message);
       setEnviando(false);
