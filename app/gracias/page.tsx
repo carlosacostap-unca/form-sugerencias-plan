@@ -15,10 +15,10 @@ function GraciasContent() {
           <button
             className="mt-4 rounded-md bg-blue-600 px-4 py-2 text-sm font-medium text-white hover:bg-blue-700"
             onClick={() => {
-              router.push("/?reset=1");
+              router.push("/sugerencias/documento");
             }}
           >
-            Enviar nuevas propuestas
+            Enviar nuevas sugerencias
           </button>
         </section>
       </div>
