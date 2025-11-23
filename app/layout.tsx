@@ -15,6 +15,11 @@ const geistMono = Geist_Mono({
 export const metadata: Metadata = {
   title: "Sugerencias Plan",
   description: "Gestión de Sugerencias para el Plan 2026",
+  icons: {
+    icon: "/facultad.png",
+    shortcut: "/facultad.png",
+    apple: "/facultad.png",
+  },
 };
 
 export default function RootLayout({
