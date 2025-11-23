@@ -61,6 +61,15 @@ CREATE TABLE public.asignatura_correlativas_aprobadas (
   CONSTRAINT asignatura_correlativas_aprobadas_asignatura_id_fkey FOREIGN KEY (asignatura_id) REFERENCES public.asignaturas(id),
   CONSTRAINT asignatura_correlativas_aprobadas_correlativa_id_fkey FOREIGN KEY (correlativa_id) REFERENCES public.asignaturas(id)
 );
+CREATE TABLE public.asignatura_correlativas_aprobadas_para_aprobar (
+  id bigint GENERATED ALWAYS AS IDENTITY NOT NULL,
+  asignatura_id bigint NOT NULL,
+  correlativa_id bigint NOT NULL,
+  created_at timestamp with time zone NOT NULL DEFAULT now(),
+  CONSTRAINT asignatura_correlativas_aprobadas_para_aprobar_pkey PRIMARY KEY (id),
+  CONSTRAINT asignatura_correlativas_aprobadas_para_aprobar_asignatura_id_fk FOREIGN KEY (asignatura_id) REFERENCES public.asignaturas(id),
+  CONSTRAINT asignatura_correlativas_aprobadas_para_aprobar_correlativa_id_f FOREIGN KEY (correlativa_id) REFERENCES public.asignaturas(id)
+);
 CREATE TABLE public.asignatura_correlativas_regularizadas (
   id bigint GENERATED ALWAYS AS IDENTITY NOT NULL,
   asignatura_id bigint NOT NULL,
@@ -78,6 +87,15 @@ CREATE TABLE public.asignatura_descriptores (
   CONSTRAINT asignatura_descriptores_pkey PRIMARY KEY (id),
   CONSTRAINT asignatura_descriptores_asignatura_id_fkey FOREIGN KEY (asignatura_id) REFERENCES public.asignaturas(id),
   CONSTRAINT asignatura_descriptores_descriptor_id_fkey FOREIGN KEY (descriptor_id) REFERENCES public.bloque_descriptores(id)
+);
+CREATE TABLE public.asignatura_equivalencias_plan_2011 (
+  id bigint GENERATED ALWAYS AS IDENTITY NOT NULL,
+  asignatura_id bigint NOT NULL,
+  plan_2011_asignatura_id bigint NOT NULL,
+  created_at timestamp with time zone NOT NULL DEFAULT now(),
+  CONSTRAINT asignatura_equivalencias_plan_2011_pkey PRIMARY KEY (id),
+  CONSTRAINT asignatura_equivalencias_plan_2011_asignatura_id_fkey FOREIGN KEY (asignatura_id) REFERENCES public.asignaturas(id),
+  CONSTRAINT asignatura_equivalencias_plan_2011_plan_2011_asignatura_id_fkey FOREIGN KEY (plan_2011_asignatura_id) REFERENCES public.asignaturas_plan_2011(id)
 );
 CREATE TABLE public.asignaturas (
   id bigint GENERATED ALWAYS AS IDENTITY NOT NULL,
@@ -107,6 +125,13 @@ CREATE TABLE public.asignaturas_optativas (
   formacion_practica text,
   created_at timestamp with time zone NOT NULL DEFAULT now(),
   CONSTRAINT asignaturas_optativas_pkey PRIMARY KEY (id)
+);
+CREATE TABLE public.asignaturas_plan_2011 (
+  id bigint GENERATED ALWAYS AS IDENTITY NOT NULL,
+  numero text NOT NULL UNIQUE,
+  nombre text NOT NULL,
+  created_at timestamp with time zone NOT NULL DEFAULT now(),
+  CONSTRAINT asignaturas_plan_2011_pkey PRIMARY KEY (id)
 );
 CREATE TABLE public.bloque_descriptores (
   id bigint GENERATED ALWAYS AS IDENTITY NOT NULL,

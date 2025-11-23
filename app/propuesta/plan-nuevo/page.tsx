@@ -1,6 +1,8 @@
 "use client";
 import { useEffect, useState } from "react";
 import { getSupabaseAnon } from "../../../lib/supabase";
+import { ReactFlow, Background, Controls, Handle, Position } from "@xyflow/react";
+import "@xyflow/react/dist/style.css";
 
 type AsignaturaDB = {
   id: number;
@@ -21,27 +23,55 @@ type AsignaturaDB = {
   created_at: string;
 };
 
+type AsigNodeData = { label: string; expanded: boolean; related: boolean; onToggle: () => void };
+function AsigNode({ data }: { data: AsigNodeData }) {
+  return (
+    <div
+      className={
+        `rounded-md border px-3 py-2 text-sm shadow-sm cursor-pointer ` +
+        (data.expanded
+          ? "bg-black text-white border-black"
+          : data.related
+          ? "bg-zinc-200 text-zinc-900 border-zinc-300"
+          : "bg-white text-zinc-900 border-zinc-300")
+      }
+      onClick={data.onToggle}
+    >
+      <div className="font-medium">{data.label}</div>
+      <Handle type="source" position={Position.Bottom} />
+      <Handle type="target" position={Position.Top} />
+    </div>
+  );
+}
+
 export default function PropuestaNuevoPlanListadoPage() {
   const [asignaturas, setAsignaturas] = useState<AsignaturaDB[]>([]);
   const [cargando, setCargando] = useState(false);
   const [expandidos, setExpandidos] = useState<Record<number, boolean>>({});
-  const [editMap, setEditMap] = useState<Record<number, Partial<AsignaturaDB> & { correlativas_regularizadas_ids?: number[]; correlativas_aprobadas_ids?: number[]; competencias_genericas_ids?: number[]; competencias_especificas_ids?: number[]; descriptores_ids?: number[] }>>({});
+  const [editMap, setEditMap] = useState<Record<number, Partial<AsignaturaDB> & { correlativas_regularizadas_ids?: number[]; correlativas_aprobadas_ids?: number[]; competencias_genericas_ids?: number[]; competencias_especificas_ids?: number[]; descriptores_ids?: number[]; ejes_transversales_ids?: number[] }>>({});
   const [saving, setSaving] = useState<Record<number, boolean>>({});
   const [regMap, setRegMap] = useState<Record<number, number[]>>({});
   const [aprMap, setAprMap] = useState<Record<number, number[]>>({});
+  const [aprParaMap, setAprParaMap] = useState<Record<number, number[]>>({});
   const [genMap, setGenMap] = useState<Record<number, number[]>>({});
   const [espMap, setEspMap] = useState<Record<number, number[]>>({});
   const [genNames, setGenNames] = useState<Record<number, string>>({});
   const [espNames, setEspNames] = useState<Record<number, string>>({});
+  const [ejeNames, setEjeNames] = useState<Record<number, string>>({});
   const [bloqueNames, setBloqueNames] = useState<Record<number, string>>({});
   const [bloqueMins, setBloqueMins] = useState<Record<number, number>>({});
   const [optativas, setOptativas] = useState<{ id: number; nombre: string; objetivos?: string | null; contenidos_minimos?: string | null; formacion_practica?: string | null }[]>([]);
   const [descNames, setDescNames] = useState<Record<number, string>>({});
   const [descMap, setDescMap] = useState<Record<number, number[]>>({});
+  const [ejeMap, setEjeMap] = useState<Record<number, number[]>>({});
   const [blockDescMap, setBlockDescMap] = useState<Record<number, number[]>>({});
   const [plan2011Nombre, setPlan2011Nombre] = useState<Record<number, string>>({});
   const [plan2011Numero, setPlan2011Numero] = useState<Record<number, string>>({});
   const [eq2011Map, setEq2011Map] = useState<Record<number, number[]>>({});
+  const [filtroAnioMapa, setFiltroAnioMapa] = useState<string>("Todos");
+  const [soloConexionesSeleccion, setSoloConexionesSeleccion] = useState<boolean>(false);
+  const [nodoSeleccionado, setNodoSeleccionado] = useState<string | null>(null);
+  const [expandedMap, setExpandedMap] = useState<Record<string, boolean>>({});
   const ANIOS = ["1º", "2º", "3º", "4º", "5º"]; 
   const REGIMENES = ["Anual", "1º Cuatr.", "2º Cuatr."];
 
@@ -78,9 +108,10 @@ export default function PropuestaNuevoPlanListadoPage() {
           nextEditMap[a.id] = initial;
         }
         setEditMap(nextEditMap);
-        const [regs, aprs, gens, esps, genTbl, espTbl, bloquesTbl, descTbl, bcdRel, adRel, optTbl, p11Tbl, eqTbl] = await Promise.all([
+        const [regs, aprs, aprsPara, gens, esps, genTbl, espTbl, bloquesTbl, descTbl, bcdRel, adRel, ejeTbl, aeRel, optTbl, p11Tbl, eqTbl] = await Promise.all([
           supabase.from("asignatura_correlativas_regularizadas").select("asignatura_id,correlativa_id"),
           supabase.from("asignatura_correlativas_aprobadas").select("asignatura_id,correlativa_id"),
+          supabase.from("asignatura_correlativas_aprobadas_para_aprobar").select("asignatura_id,correlativa_id"),
           supabase.from("asignatura_competencias_genericas").select("asignatura_id,competencia_generica_id"),
           supabase.from("asignatura_competencias_especificas").select("asignatura_id,competencia_especifica_id"),
           supabase.from("competencias_genericas").select("id,nombre").order("nombre"),
@@ -89,6 +120,8 @@ export default function PropuestaNuevoPlanListadoPage() {
           supabase.from("bloque_descriptores").select("id,nombre").order("nombre"),
           supabase.from("bloques_conocimiento_descriptores").select("bloque_conocimiento_id,descriptor_id"),
           supabase.from("asignatura_descriptores").select("asignatura_id,descriptor_id"),
+          supabase.from("ejes_transversales_formacion").select("id,nombre").order("nombre"),
+          supabase.from("asignatura_ejes_transversales_formacion").select("asignatura_id,eje_id"),
           supabase.from("asignaturas_optativas").select("id,nombre,objetivos,contenidos_minimos,formacion_practica").order("nombre"),
           supabase.from("asignaturas_plan_2011").select("id,numero,nombre").order("numero"),
           supabase.from("asignatura_equivalencias_plan_2011").select("asignatura_id,plan_2011_asignatura_id"),
@@ -102,6 +135,11 @@ export default function PropuestaNuevoPlanListadoPage() {
         for (const row of (aprs.data ?? []) as { asignatura_id: number; correlativa_id: number }[]) {
           const arr = aMap[row.asignatura_id] || [];
           aMap[row.asignatura_id] = [...arr, row.correlativa_id];
+        }
+        const apMap: Record<number, number[]> = {};
+        for (const row of (aprsPara.data ?? []) as { asignatura_id: number; correlativa_id: number }[]) {
+          const arr = apMap[row.asignatura_id] || [];
+          apMap[row.asignatura_id] = [...arr, row.correlativa_id];
         }
         const gMap: Record<number, number[]> = {};
         for (const row of (gens.data ?? []) as { asignatura_id: number; competencia_generica_id: number }[]) {
@@ -117,6 +155,8 @@ export default function PropuestaNuevoPlanListadoPage() {
         for (const row of (genTbl.data ?? []) as { id: number; nombre: string }[]) gNames[row.id] = row.nombre;
         const eNames: Record<number, string> = {};
         for (const row of (espTbl.data ?? []) as { id: number; nombre: string }[]) eNames[row.id] = row.nombre;
+        const etNames: Record<number, string> = {};
+        for (const row of (ejeTbl.data ?? []) as { id: number; nombre: string }[]) etNames[row.id] = row.nombre;
         const bNames: Record<number, string> = {};
         const bMins: Record<number, number> = {};
         for (const row of (bloquesTbl.data ?? []) as { id: number; nombre: string; horas_minimas?: number | null }[]) {
@@ -136,17 +176,25 @@ export default function PropuestaNuevoPlanListadoPage() {
           const arr = dMap[row.asignatura_id] || [];
           dMap[row.asignatura_id] = [...arr, row.descriptor_id];
         }
+        const ejMap: Record<number, number[]> = {};
+        for (const row of (aeRel.data ?? []) as { asignatura_id: number; eje_id: number }[]) {
+          const arr = ejMap[row.asignatura_id] || [];
+          ejMap[row.asignatura_id] = [...arr, row.eje_id];
+        }
         setRegMap(rMap);
         setAprMap(aMap);
+        setAprParaMap(apMap);
         setGenMap(gMap);
         setEspMap(eMap);
         setGenNames(gNames);
         setEspNames(eNames);
+        setEjeNames(etNames);
         setBloqueNames(bNames);
         setBloqueMins(bMins);
         setDescNames(dNames);
         setBlockDescMap(bdMap);
         setDescMap(dMap);
+        setEjeMap(ejMap);
         setOptativas(((optTbl.data ?? []) as any[]).map((x) => ({ id: Number(x.id), nombre: String(x.nombre || ""), objetivos: x.objetivos ?? null, contenidos_minimos: x.contenidos_minimos ?? null, formacion_practica: x.formacion_practica ?? null })));
         const pNames: Record<number, string> = {};
         const pNums: Record<number, string> = {};
@@ -506,6 +554,34 @@ export default function PropuestaNuevoPlanListadoPage() {
                                           })()}
                                         </div>
                                       </div>
+                                      <div className="mt-3">
+                                        <div className="mb-1 text-xs text-zinc-500">Ejes transversales de formación</div>
+                                        <div className="max-h-48 overflow-y-auto rounded-md border border-zinc-200 bg-white px-3 py-2">
+                                          {Object.entries(ejeNames)
+                                            .map(([eid, nombre]) => ({ id: Number(eid), nombre }))
+                                            .filter((x) => !!x.nombre)
+                                            .sort((a, b) => (a.nombre || "").localeCompare(b.nombre || "", "es", { sensitivity: "base" }))
+                                            .map((it) => {
+                                              const curr = (editMap[a.id]?.ejes_transversales_ids ?? ejeMap[a.id] ?? []);
+                                              const checked = curr.includes(it.id);
+                                              return (
+                                                <label key={`eje-${it.id}`} className="flex items-center gap-2 py-0.5 text-sm">
+                                                  <input
+                                                    type="checkbox"
+                                                    className="rounded"
+                                                    checked={checked}
+                                                    onChange={(e) => {
+                                                      const base = (editMap[a.id]?.ejes_transversales_ids ?? ejeMap[a.id] ?? []);
+                                                      const next = e.target.checked ? [...base, it.id] : base.filter((id) => id !== it.id);
+                                                      setEditMap((prev) => ({ ...prev, [a.id]: { ...prev[a.id], ejes_transversales_ids: next } }));
+                                                    }}
+                                                  />
+                                                  <span>{it.nombre}</span>
+                                                </label>
+                                              );
+                                            })}
+                                        </div>
+                                      </div>
                                       <div className="mt-4 flex items-center gap-2">
                                         <button className="rounded-md bg-green-600 px-4 py-2 text-sm font-semibold text-white hover:bg-green-700 disabled:opacity-50" disabled={!!saving[a.id]} onClick={async () => {
                                           setSaving((prev) => ({ ...prev, [a.id]: true }));
@@ -530,6 +606,7 @@ export default function PropuestaNuevoPlanListadoPage() {
                                             competencias_genericas_ids: editMap[a.id]?.competencias_genericas_ids ?? genMap[a.id] ?? [],
                                             competencias_especificas_ids: editMap[a.id]?.competencias_especificas_ids ?? espMap[a.id] ?? [],
                                             descriptores_ids: editMap[a.id]?.descriptores_ids ?? descMap[a.id] ?? [],
+                                            ejes_transversales_ids: editMap[a.id]?.ejes_transversales_ids ?? ejeMap[a.id] ?? [],
                                           };
                                           const res = await fetch("/api/asignaturas/update", { method: "POST", headers: { "Content-Type": "application/json" }, body: JSON.stringify(payload) });
                                           const j = await res.json();
@@ -624,17 +701,18 @@ export default function PropuestaNuevoPlanListadoPage() {
                   <div className="mt-3 overflow-x-auto">
                     <table className="min-w-full table-fixed border border-zinc-300 text-sm">
                       <colgroup>
-                        <col style={{ width: "9.09%" }} />
-                        <col style={{ width: "9.09%" }} />
-                        <col style={{ width: "9.09%" }} />
-                        <col style={{ width: "9.09%" }} />
-                        <col style={{ width: "9.09%" }} />
-                        <col style={{ width: "9.09%" }} />
-                        <col style={{ width: "9.09%" }} />
-                        <col style={{ width: "9.09%" }} />
-                        <col style={{ width: "9.09%" }} />
-                        <col style={{ width: "9.09%" }} />
-                        <col style={{ width: "9.09%" }} />
+                        <col style={{ width: "8.33%" }} />
+                        <col style={{ width: "8.33%" }} />
+                        <col style={{ width: "8.33%" }} />
+                        <col style={{ width: "8.33%" }} />
+                        <col style={{ width: "8.33%" }} />
+                        <col style={{ width: "8.33%" }} />
+                        <col style={{ width: "8.33%" }} />
+                        <col style={{ width: "8.33%" }} />
+                        <col style={{ width: "8.33%" }} />
+                        <col style={{ width: "8.33%" }} />
+                        <col style={{ width: "8.33%" }} />
+                        <col style={{ width: "8.33%" }} />
                       </colgroup>
                       <thead>
                         <tr className="bg-zinc-100">
@@ -647,8 +725,9 @@ export default function PropuestaNuevoPlanListadoPage() {
                           <th className="border border-zinc-300 px-2 py-1 text-center">Coef. Hs. Trab. Indep.</th>
                           <th className="border border-zinc-300 px-2 py-1 text-center">Cant. Total Hs. Trab. Indep.</th>
                           <th className="border border-zinc-300 px-2 py-1 text-center">Cant. Total Hs. Trab.</th>
-                          <th className="border border-zinc-300 px-2 py-1 text-center">Correlativas regularizadas</th>
-                          <th className="border border-zinc-300 px-2 py-1 text-center">Correlativas aprobadas</th>
+                          <th className="border border-zinc-300 px-2 py-1 text-center">Correlativas regularizadas para cursar</th>
+                          <th className="border border-zinc-300 px-2 py-1 text-center">Correlativas aprobadas para cursar</th>
+                          <th className="border border-zinc-300 px-2 py-1 text-center">Correlativas aprobadas para aprobar</th>
                         </tr>
                       </thead>
                       <tbody>
@@ -684,6 +763,11 @@ export default function PropuestaNuevoPlanListadoPage() {
                               .filter(Boolean)
                               .sort((a, b) => a.localeCompare(b, "es", { sensitivity: "base" }))
                               .join("\n");
+                            const aprsPara = (aprParaMap[x.id] || [])
+                              .map((id) => asignaturas.find((g) => g.id === id)?.codigo || asignaturas.find((g) => g.id === id)?.nombre || "")
+                              .filter(Boolean)
+                              .sort((a, b) => a.localeCompare(b, "es", { sensitivity: "base" }))
+                              .join("\n");
                             return (
                               <tr key={x.id}>
                                 <td className="border border-zinc-300 px-2 py-1 text-center">{x.codigo || "-"}</td>
@@ -695,9 +779,10 @@ export default function PropuestaNuevoPlanListadoPage() {
                                 <td className="border border-zinc-300 px-2 py-1 text-center">{fmt(coef)}</td>
                                 <td className="border border-zinc-300 px-2 py-1 text-center">{fmt(tiTot)}</td>
                                 <td className="border border-zinc-300 px-2 py-1 text-center">{fmt(trabTot)}</td>
-                                <td className="border border-zinc-300 px-2 py-1 text-center"><div className="whitespace-pre-wrap">{regs || "-"}</div></td>
-                                <td className="border border-zinc-300 px-2 py-1 text-center"><div className="whitespace-pre-wrap">{aprs || "-"}</div></td>
-                              </tr>
+                              <td className="border border-zinc-300 px-2 py-1 text-center"><div className="whitespace-pre-wrap">{regs || "-"}</div></td>
+                              <td className="border border-zinc-300 px-2 py-1 text-center"><div className="whitespace-pre-wrap">{aprs || "-"}</div></td>
+                              <td className="border border-zinc-300 px-2 py-1 text-center"><div className="whitespace-pre-wrap">{aprsPara || "-"}</div></td>
+                            </tr>
                             );
                           })}
                         <tr className="bg-zinc-50 font-medium">
@@ -708,6 +793,7 @@ export default function PropuestaNuevoPlanListadoPage() {
                           <td className="border border-zinc-300 px-2 py-1"></td>
                           <td className="border border-zinc-300 px-2 py-1 text-center">{fmt(totalTI)}</td>
                           <td className="border border-zinc-300 px-2 py-1 text-center">{fmt(totalTrabajo)}</td>
+                          <td className="border border-zinc-300 px-2 py-1"></td>
                           <td className="border border-zinc-300 px-2 py-1"></td>
                           <td className="border border-zinc-300 px-2 py-1"></td>
                         </tr>
@@ -865,6 +951,175 @@ export default function PropuestaNuevoPlanListadoPage() {
                       </div>
                     </div>
                   </div>
+                </div>
+              );
+            })()}
+            {(() => {
+              const anios = ["1º", "2º", "3º", "4º", "5º"];
+              const byYear: Record<string, AsignaturaDB[]> = {};
+              for (const a of asignaturas) {
+                const y = a.anio || "";
+                byYear[y] = [...(byYear[y] || []), a];
+              }
+              const xGap = 220;
+              const yGap = 120;
+              const edgesAll = [] as { id: string; source: string; target: string }[];
+              for (const t of asignaturas) {
+                const regs = regMap[t.id] || [];
+                for (const sId of regs) {
+                  if (!asignaturas.find((x) => x.id === sId)) continue;
+                  edgesAll.push({ id: `e-${sId}-${t.id}`, source: String(sId), target: String(t.id) });
+                }
+              }
+              const years = filtroAnioMapa === "Todos" ? anios : [filtroAnioMapa];
+              const baseNodes = [] as { id: string; position: { x: number; y: number }; type: "asignatura"; data: { label: string; expanded: boolean; related: boolean; onToggle: () => void } }[];
+              for (let col = 0; col < years.length; col++) {
+                const year = years[col];
+                const list = (byYear[year] || []).sort((a, b) => (a.nombre || "").localeCompare(b.nombre || "", "es", { sensitivity: "base" }));
+                for (let row = 0; row < list.length; row++) {
+                  const a = list[row];
+                  const id = String(a.id);
+                  const label = a.nombre;
+                  baseNodes.push({
+                    id,
+                    position: { x: row * xGap, y: col * yGap },
+                    type: "asignatura",
+                    data: {
+                      label,
+                      expanded: !!expandedMap[id],
+                      related: false,
+                      onToggle: () => setExpandedMap((prev) => ({ ...prev, [id]: !prev[id] }))
+                    }
+                  });
+                }
+              }
+              let nodes = baseNodes;
+              if (nodoSeleccionado) {
+                const sel = nodoSeleccionado;
+                const incoming = edgesAll.filter((e) => e.target === sel).map((e) => e.source);
+                const aprChildren = (aprMap[Number(sel)] || []).map((id) => String(id));
+                const center = baseNodes.find((n) => n.id === sel)?.position || { x: 0, y: 0 };
+                const xStep = Math.max(140, xGap * 0.75);
+                const posRegY = center.y + yGap;
+                const posAprY = center.y + 2 * yGap;
+                const makeRowPositions = (count: number) => {
+                  const half = (count - 1) / 2;
+                  return Array.from({ length: count }, (_, i) => center.x + (i - half) * xStep);
+                };
+                nodes = [];
+                // selected node stays in place
+                nodes.push({
+                  id: sel,
+                  position: center,
+                  type: "asignatura",
+                  data: { label: asignaturas.find((a) => String(a.id) === sel)?.nombre || sel, expanded: true, related: false, onToggle: () => setExpandedMap((prev) => ({ ...prev, [sel]: !prev[sel] })) }
+                });
+                const regXs = makeRowPositions(incoming.length);
+                incoming
+                  .sort((a, b) => {
+                    const an = asignaturas.find((x) => String(x.id) === a)?.nombre || "";
+                    const bn = asignaturas.find((x) => String(x.id) === b)?.nombre || "";
+                    return an.localeCompare(bn, "es", { sensitivity: "base" });
+                  })
+                  .forEach((id, i) => {
+                    nodes.push({
+                      id,
+                      position: { x: regXs[i], y: posRegY },
+                      type: "asignatura",
+                      data: { label: asignaturas.find((a) => String(a.id) === id)?.nombre || id, expanded: !!expandedMap[id], related: true, onToggle: () => setExpandedMap((prev) => ({ ...prev, [id]: !prev[id] })) }
+                    });
+                  });
+                const aprXs = makeRowPositions(aprChildren.length);
+                aprChildren
+                  .sort((a, b) => {
+                    const an = asignaturas.find((x) => String(x.id) === a)?.nombre || "";
+                    const bn = asignaturas.find((x) => String(x.id) === b)?.nombre || "";
+                    return an.localeCompare(bn, "es", { sensitivity: "base" });
+                  })
+                  .forEach((id, i) => {
+                    nodes.push({
+                      id,
+                      position: { x: aprXs[i], y: posAprY },
+                      type: "asignatura",
+                      data: { label: asignaturas.find((a) => String(a.id) === id)?.nombre || id, expanded: !!expandedMap[id], related: true, onToggle: () => setExpandedMap((prev) => ({ ...prev, [id]: !prev[id] })) }
+                    });
+                  });
+              }
+              const nodeIds = new Set(nodes.map((n) => n.id));
+              let edges = edgesAll.filter((e) => nodeIds.has(e.source) && nodeIds.has(e.target));
+              const relatedIds = new Set<string>();
+              for (const e of edges) {
+                if (expandedMap[e.source]) relatedIds.add(e.target);
+                if (expandedMap[e.target]) relatedIds.add(e.source);
+              }
+              const nodesStyled = nodes.map((n) => ({
+                ...n,
+                data: { ...n.data, related: relatedIds.has(n.id) && !n.data.expanded },
+              }));
+              if (nodoSeleccionado) {
+                const sel = nodoSeleccionado;
+                const regEdges = (regMap[Number(sel)] || []).map((id) => ({ id: `e-reg-${id}-${sel}`, source: String(id), target: sel }));
+                const aprEdges = (aprMap[Number(sel)] || []).map((id) => ({ id: `e-apr-${id}-${sel}`, source: String(id), target: sel }));
+                edges = [...regEdges, ...aprEdges];
+              } else {
+                edges = edges.filter((e) => (expandedMap[e.source] || expandedMap[e.target]));
+              }
+              if (soloConexionesSeleccion && nodoSeleccionado) {
+                edges = edges.filter((e) => e.source === nodoSeleccionado || e.target === nodoSeleccionado);
+              }
+              if (!nodes.length) return null;
+              return (
+                <div className="mt-8">
+                  <h3 className="text-lg font-semibold">Mapa mental de correlativas regulares</h3>
+                  <div className="mt-3 rounded-lg border border-zinc-200">
+                    <div className="flex flex-wrap items-center gap-3 px-3 py-2">
+                      <label className="text-sm">
+                        <span className="mr-2">Año:</span>
+                        <select className="rounded-md border border-zinc-300 bg-white px-2 py-1 text-sm" value={filtroAnioMapa} onChange={(e) => setFiltroAnioMapa(e.target.value)}>
+                          <option>Todos</option>
+                          {anios.map((a) => (
+                            <option key={`opt-${a}`}>{a}</option>
+                          ))}
+                        </select>
+                      </label>
+                      <label className="flex items-center gap-2 text-sm">
+                        <input type="checkbox" checked={soloConexionesSeleccion} onChange={(e) => setSoloConexionesSeleccion(e.target.checked)} />
+                        <span>Mostrar solo conexiones del nodo seleccionado</span>
+                      </label>
+                      <button className="rounded-md border border-zinc-300 bg-white px-2 py-1 text-sm" onClick={() => setNodoSeleccionado(null)}>Limpiar selección</button>
+                      <button className="rounded-md border border-zinc-300 bg-white px-2 py-1 text-sm" onClick={() => setExpandedMap((prev) => {
+                        const next: Record<string, boolean> = {};
+                        nodes.forEach((n) => { next[n.id] = true; });
+                        return next;
+                      })}>Expandir todo</button>
+                      <button className="rounded-md border border-zinc-300 bg-white px-2 py-1 text-sm" onClick={() => setExpandedMap((prev) => {
+                        const next: Record<string, boolean> = {};
+                        nodes.forEach((n) => { next[n.id] = false; });
+                        return next;
+                      })}>Contraer todo</button>
+                    </div>
+                    <div style={{ width: "100%", height: 500 }}>
+                      <ReactFlow
+                        nodes={nodesStyled}
+                        edges={edges}
+                        fitView
+                        defaultEdgeOptions={{ type: "straight" }}
+                        onNodeClick={(_, n) => {
+                          setNodoSeleccionado((curr) => {
+                            if (curr === n.id) return null;
+                            setExpandedMap((prev) => ({ ...prev, [n.id]: true }));
+                            return n.id;
+                          });
+                        }}
+                        onPaneClick={() => setNodoSeleccionado(null)}
+                        nodeTypes={{ asignatura: AsigNode }}
+                      >
+                        <Controls />
+                        <Background />
+                      </ReactFlow>
+                    </div>
+                  </div>
+                  <p className="mt-2 text-xs text-zinc-600">Cada flecha indica una correlativa regular requerida.</p>
                 </div>
               );
             })()}
@@ -1158,7 +1413,13 @@ export default function PropuestaNuevoPlanListadoPage() {
                 aNames[a.id] = a.nombre || String(a.id);
                 aCodes[a.id] = (a.codigo || "").trim();
               }
-              const items = [...asignaturas].sort((a, b) => (a.nombre || "").localeCompare(b.nombre || "", "es", { sensitivity: "base" }));
+              const items = [...asignaturas].sort((a, b) => {
+                const ac = (a.codigo || "").trim();
+                const bc = (b.codigo || "").trim();
+                const byCode = ac.localeCompare(bc, "es", { sensitivity: "base" });
+                if (byCode !== 0) return byCode;
+                return (a.nombre || "").localeCompare(b.nombre || "", "es", { sensitivity: "base" });
+              });
               return items.map((a) => {
                 const bid = a.bloque_conocimiento_id ?? null;
                 const bloque = bid ? (bloqueNames[bid] || "-") : "-";
@@ -1180,6 +1441,8 @@ export default function PropuestaNuevoPlanListadoPage() {
                   .join(", ");
                 const compsGenArr = (genMap[a.id] || []).map((id) => genNames[id]).filter(Boolean).sort((x, y) => x.localeCompare(y, "es", { sensitivity: "base" }));
                 const compsEspArr = (espMap[a.id] || []).map((id) => espNames[id]).filter(Boolean).sort((x, y) => x.localeCompare(y, "es", { sensitivity: "base" }));
+                const ejesArr = (ejeMap[a.id] || []).map((id) => ejeNames[id]).filter(Boolean).sort((x, y) => x.localeCompare(y, "es", { sensitivity: "base" }));
+                const descArr = (descMap[a.id] || []).map((id) => descNames[id]).filter(Boolean).sort((x, y) => x.localeCompare(y, "es", { sensitivity: "base" }));
                 const objetivosArr = String(a.objetivos || "")
                   .split(/\r?\n+/)
                   .map((s) => s.trim())
@@ -1194,33 +1457,94 @@ export default function PropuestaNuevoPlanListadoPage() {
                       </colgroup>
                       <tbody>
                         <tr>
-                          <td className="border border-zinc-300 px-2 py-1">Asignatura: {a.nombre}</td>
-                          <td className="border border-zinc-300 px-2 py-1">Año: {a.anio || "-"}</td>
-                          <td className="border border-zinc-300 px-2 py-1">Código: {a.codigo || "-"}</td>
+                          <td className="border border-zinc-300 px-2 py-1 align-top">Asignatura: <span className="font-semibold">{a.nombre}</span></td>
+                          <td className="border border-zinc-300 px-2 py-1 align-top">Año: {a.anio || "-"}</td>
+                          <td className="border border-zinc-300 px-2 py-1 align-top">Código: <span className="font-semibold">{a.codigo || "-"}</span></td>
                         </tr>
                         <tr>
-                          <td className="border border-zinc-300 px-2 py-1">Régimen: {a.regimen || "-"}</td>
-                          <td className="border border-zinc-300 px-2 py-1">Cantidad de Horas Semanales Sincrónicas: {fmt(a.horas_semanales_sincronicas)}</td>
-                          <td className="border border-zinc-300 px-2 py-1">Cantidad Total de Horas Sincrónicas: {fmt(hsTotSync)}</td>
+                          <td className="border border-zinc-300 px-2 py-1 align-top">Régimen: {a.regimen || "-"}</td>
+                          <td className="border border-zinc-300 px-2 py-1 align-top">Cantidad de Horas Semanales Sincrónicas: {fmt(a.horas_semanales_sincronicas)}</td>
+                          <td className="border border-zinc-300 px-2 py-1 align-top">Cantidad Total de Horas Sincrónicas: {fmt(hsTotSync)}</td>
                         </tr>
                         <tr>
-                          <td className="border border-zinc-300 px-2 py-1">Bloque de Conocimiento: {bloque}</td>
-                          <td className="border border-zinc-300 px-2 py-1">Coeficiente de Horas de Trabajo Independiente: {fmt(coefTI)}</td>
-                          <td className="border border-zinc-300 px-2 py-1">Cantidad Total de Horas de Trabajo Independiente: {fmt(hsTI)}</td>
+                          <td className="border border-zinc-300 px-2 py-1 align-top">Bloque de Conocimiento: {bloque}</td>
+                          <td className="border border-zinc-300 px-2 py-1 align-top">Coeficiente de Horas de Trabajo Independiente: {fmt(coefTI)}</td>
+                          <td className="border border-zinc-300 px-2 py-1 align-top">Cantidad Total de Horas de Trabajo Independiente: {fmt(hsTI)}</td>
                         </tr>
                         <tr>
-                          <td className="border border-zinc-300 px-2 py-1">Cantidad Total de Horas de Trabajo: {fmt(hsTrabTot)}</td>
-                          <td className="border border-zinc-300 px-2 py-1">Correlativas regulares: {corrReg || "-"}</td>
-                          <td className="border border-zinc-300 px-2 py-1">Correlativas aprobadas: {corrApr || "-"}</td>
+                          <td className="border border-zinc-300 px-2 py-1 align-top">Cantidad Total de Horas de Trabajo: {fmt(hsTrabTot)}</td>
+                          <td className="border border-zinc-300 px-2 py-1 align-top">
+                            <div>Asignaturas correlativas para cursar:</div>
+                            <div className="mt-1">
+                              <ul className="list-disc pl-5">
+                                <li>
+                                  Correlativas regularizadas:
+                                  {(() => {
+                                    const arr = (regMap[a.id] || [])
+                                      .map((id) => ({ code: (aCodes[id] || "").trim(), name: aNames[id] }))
+                                      .filter((p) => p.code || p.name)
+                                      .sort((x, y) => (x.code || "").localeCompare(y.code || "", "es", { sensitivity: "base" }));
+                                    return arr.length ? (
+                                      <ul className="list-disc pl-5">
+                                        {arr.map((p, i) => (
+                                          <li key={`cr-${a.id}-${i}`}>{p.code ? `${p.code} - ${p.name || ""}` : `${p.name || ""}`}</li>
+                                        ))}
+                                      </ul>
+                                    ) : (
+                                      <span> -</span>
+                                    );
+                                  })()}
+                                </li>
+                                <li>
+                                  Correlativas aprobadas:
+                                  {(() => {
+                                    const arr = (aprMap[a.id] || [])
+                                      .map((id) => ({ code: (aCodes[id] || "").trim(), name: aNames[id] }))
+                                      .filter((p) => p.code || p.name)
+                                      .sort((x, y) => (x.code || "").localeCompare(y.code || "", "es", { sensitivity: "base" }));
+                                    return arr.length ? (
+                                      <ul className="list-disc pl-5">
+                                        {arr.map((p, i) => (
+                                          <li key={`ca-${a.id}-${i}`}>{p.code ? `${p.code} - ${p.name || ""}` : `${p.name || ""}`}</li>
+                                        ))}
+                                      </ul>
+                                    ) : (
+                                      <span> -</span>
+                                    );
+                                  })()}
+                                </li>
+                              </ul>
+                            </div>
+                          </td>
+                          <td className="border border-zinc-300 px-2 py-1 align-top">
+                            <div>Asignaturas correlativas aprobadas para aprobar:</div>
+                            <div className="mt-1">
+                              {(() => {
+                                const arr = (aprParaMap[a.id] || [])
+                                  .map((id) => ({ code: (aCodes[id] || "").trim(), name: aNames[id] }))
+                                  .filter((p) => p.code || p.name)
+                                  .sort((x, y) => (x.code || "").localeCompare(y.code || "", "es", { sensitivity: "base" }));
+                                return arr.length ? (
+                                  <ul className="list-disc pl-5">
+                                    {arr.map((p, i) => (
+                                      <li key={`ca-${a.id}-${i}`}>{p.code ? `${p.code} - ${p.name || ""}` : `${p.name || ""}`}</li>
+                                    ))}
+                                  </ul>
+                                ) : (
+                                  <span>-</span>
+                                );
+                              })()}
+                            </div>
+                          </td>
                         </tr>
                         <tr>
                           <td className="border border-zinc-300 px-2 py-1 align-top">
-                            <div>Competencias genéricas:</div>
+                            <div>Descriptores de conocimiento:</div>
                             <div>
-                              {compsGenArr.length ? (
+                              {descArr.length ? (
                                 <ul className="list-disc pl-5">
-                                  {compsGenArr.map((x, i) => (
-                                    <li key={`cg-${a.id}-${i}`}>{x}</li>
+                                  {descArr.map((x, i) => (
+                                    <li key={`desc-${a.id}-${i}`}>{x}</li>
                                   ))}
                                 </ul>
                               ) : (
@@ -1229,12 +1553,12 @@ export default function PropuestaNuevoPlanListadoPage() {
                             </div>
                           </td>
                           <td className="border border-zinc-300 px-2 py-1 align-top">
-                            <div>Competencias específicas:</div>
+                            <div>Ejes transversales de formación:</div>
                             <div>
-                              {compsEspArr.length ? (
+                              {ejesArr.length ? (
                                 <ul className="list-disc pl-5">
-                                  {compsEspArr.map((x, i) => (
-                                    <li key={`ce-${a.id}-${i}`}>{x}</li>
+                                  {ejesArr.map((x, i) => (
+                                    <li key={`eje-${a.id}-${i}`}>{x}</li>
                                   ))}
                                 </ul>
                               ) : (
@@ -1242,9 +1566,6 @@ export default function PropuestaNuevoPlanListadoPage() {
                               )}
                             </div>
                           </td>
-                          <td className="border border-zinc-300 px-2 py-1">Cantidad de horas de formación práctica: {fmt(a.horas_formacion_practica)}</td>
-                        </tr>
-                        <tr>
                           <td className="border border-zinc-300 px-2 py-1 align-top">
                             <div>Objetivos:</div>
                             <div>
@@ -1259,8 +1580,11 @@ export default function PropuestaNuevoPlanListadoPage() {
                               )}
                             </div>
                           </td>
+                        </tr>
+                        <tr>
                           <td className="border border-zinc-300 px-2 py-1 align-top"><div className="whitespace-pre-wrap">Contenidos Mínimos: {a.contenidos_minimos || "-"}</div></td>
                           <td className="border border-zinc-300 px-2 py-1 align-top"><div className="whitespace-pre-wrap">Formación Práctica: {a.formacion_practica || "-"}</div></td>
+                          <td className="border border-zinc-300 px-2 py-1 align-top">Cantidad de horas de formación práctica: {fmt(a.horas_formacion_practica)}</td>
                         </tr>
                       </tbody>
                     </table>

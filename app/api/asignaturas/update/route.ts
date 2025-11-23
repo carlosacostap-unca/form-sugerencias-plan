@@ -36,6 +36,7 @@ export async function POST(req: Request) {
   const gens: number[] | undefined = Array.isArray(b?.competencias_genericas_ids) ? b.competencias_genericas_ids : undefined;
   const esps: number[] | undefined = Array.isArray(b?.competencias_especificas_ids) ? b.competencias_especificas_ids : undefined;
   const descs: number[] | undefined = Array.isArray(b?.descriptores_ids) ? b.descriptores_ids : undefined;
+  const ejes: number[] | undefined = Array.isArray(b?.ejes_transversales_ids) ? b.ejes_transversales_ids : undefined;
 
   if (regs) {
     await supabase.from("asignatura_correlativas_regularizadas").delete().eq("asignatura_id", id);
@@ -70,6 +71,13 @@ export async function POST(req: Request) {
     if (descs.length) {
       const rows = descs.map((descriptor_id) => ({ asignatura_id: id, descriptor_id }));
       await supabase.from("asignatura_descriptores").insert(rows);
+    }
+  }
+  if (ejes) {
+    await supabase.from("asignatura_ejes_transversales_formacion").delete().eq("asignatura_id", id);
+    if (ejes.length) {
+      const rows = ejes.map((eje_id) => ({ asignatura_id: id, eje_id }));
+      await supabase.from("asignatura_ejes_transversales_formacion").insert(rows);
     }
   }
 
