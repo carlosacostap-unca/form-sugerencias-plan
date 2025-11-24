@@ -234,22 +234,22 @@ export default function DocumentoPage() {
         <div className="mt-1"><a className="text-sm text-blue-700 hover:underline" href={`/sugerencias/documento?seccion=${encodeURIComponent("Fundamentación de la propuesta")}`} target="_blank" rel="noopener noreferrer">Sugerir cambios en esta sección</a></div>
         <div className="mt-4 space-y-4 text-justify leading-relaxed">
           <p>
-            El presente Plan de Estudios de la carrera Ingeniería en Informática de la Universidad Nacional de Catamarca surge como resultado de un proceso de autoevaluación y revisión crítica del diseño curricular vigente (Plan 2011), llevado adelante por el Departamento de Informática, debido a la rápida evolución de la disciplina y a la obsolescencia de conocimientos que obliga a implementar acciones sistemáticas para asegurar la pertinencia y calidad de la formación profesional, en consonancia con las necesidades de la región.
+            El presente Plan de Estudios de la carrera Ingeniería en Informática de la Universidad Nacional de Catamarca (UNCA) surge como resultado de un proceso de autoevaluación y revisión crítica del diseño curricular vigente (Plan 2011), llevado adelante por el Departamento de Informática, debido a que la disciplina Informática se caracteriza por una rápida evolución y una obsolescencia de los conocimientos adquiridos, lo que obliga a la Facultad a implementar acciones sistemáticas para asegurar la pertinencia y calidad de la formación profesional, con un compromiso prioritario con las necesidades de la región.
           </p>
           <p>
-            Esta adecuación se enmarca en el Artículo 43 de la Ley de Educación Superior (LES), el cumplimiento de los Estándares Nacionales (RM Nº 1557/2021 y sus modificatorias) y la alineación con los estándares regionales ARCUSUR (Dimensión 2: Proyecto Académico), contemplando la Carga Horaria Mínima en los Bloques de Conocimiento y los criterios de Intensidad de la Formación Práctica.
+            Esta adecuación curricular es imperativa al enmarcarse en la obligación de las carreras comprendidas en el Artículo 43 de la Ley de Educación Superior (LES), lo cual requiere el cumplimiento de los Estándares Nacionales (RM N° 1557/2021 y sus modificatorias) y la alineación con los estándares regionales ARCUSUR (Dimensión 2: Proyecto Académico), en vistas a los procesos de acreditación. Específicamente, el diseño curricular debe contemplar las Actividades Profesionales Reservadas (AARR) para Sistemas de Información/Informática (RM N° 1254/2018), y debe garantizar una Carga Horaria Mínima de 3600 horas distribuida en los cuatro Bloques de Conocimiento (Ciencias Básicas, Tecnologías Básicas, Tecnologías Aplicadas, y Ciencias y Tecnologías Complementarias) para el desarrollo de las competencias mínimas indispensables para el correcto ejercicio de las AARR.
           </p>
           <p>
-            La propuesta adopta un modelo basado en competencias, buscando equilibrio entre conocimientos científicos, tecnológicos y de gestión, con formación humanística; garantizando que el egresado posea una educación que lo habilite para ejercer, aprender, desarrollar y emprender nuevas tecnologías con actitud ética, crítica y creativa para identificar y resolver problemas en forma sistémica, considerando aspectos políticos, económicos, sociales, ambientales y culturales.
+            La propuesta formativa adopta un modelo basado en el desarrollo de competencias, buscando un balance equilibrado entre conocimientos científicos, tecnológicos y de gestión, con formación humanística, y garantizando que el egresado posea una adecuada formación habilitándolo para ejercer, aprender, desarrollar y emprender nuevas tecnologías, con actitud ética, crítica y creativa para la identificación y resolución de problemas en forma sistémica, considerando aspectos políticos, económicos, sociales, ambientales y culturales desde una perspectiva global, tomando en cuenta las necesidades de la sociedad.
           </p>
           <p>
-            Asimismo, se fortalece la articulación académica entre carreras de Ingeniería dictadas en la Facultad de Tecnología y Ciencias Aplicadas, promoviendo sinergias en asignaturas comunes del ciclo básico y estrategias de cooperación académica e interdisciplinaria.
+            En éste sentido, la propuesta responde también, a la necesidad de consolidar una mayor articulación académica entre las distintas carreras de Ingeniería que se dictan en la Facultad de Tecnología y Ciencias Aplicadas, promoviendo sinergias en asignaturas comunes del ciclo básico y estrategias de cooperación académica e interdisciplinaria en los ciclos superiores.
           </p>
           <p>
-            Se reconoce la importancia de atender demandas del entorno productivo, institucional y tecnológico de la región de Catamarca y del Noroeste Argentino; el nuevo plan busca formar profesionales capaces de dar respuesta a desafíos actuales y futuros del sector público y privado, contribuyendo a la transformación digital, la innovación, la sostenibilidad y la soberanía tecnológica.
+            Asimismo, se reconoce la importancia de atender a las demandas del entorno productivo, institucional y tecnológico de la región de Catamarca y del Noroeste Argentino. En este sentido, el nuevo plan busca formar profesionales capaces de dar respuesta a los desafíos actuales y futuros del sector público y privado, contribuyendo a la transformación digital, el desarrollo de capacidades tecnológicas locales, la innovación, la sostenibilidad y la soberanía tecnológica. Esta perspectiva regional fortalece la pertinencia social de la carrera y su compromiso con el desarrollo territorial.
           </p>
           <p>
-            Este enfoque asegura que la intervención profesional del graduado no comprometa el interés público ni el desarrollo sostenible, y garantiza la Intensidad de la Formación Práctica (incluyendo la Práctica Profesional Supervisada y el Proyecto Integrador/Final) como espacios de aplicación de competencias, observando seguridad, impacto social y preservación del ambiente.
+            Este enfoque asegura que la intervención profesional del graduado no comprometa el interés público ni el desarrollo sostenible, satisfaciendo las necesidades del presente sin comprometer la capacidad de las futuras generaciones. Finalmente, el plan garantiza la Intensidad de la Formación Práctica (Anexo III de la RM N° 1557/2021), incluyendo la Práctica Profesional Supervisada (PPS) y el Proyecto Integrador/Final como espacios cruciales de aplicación de competencias, observando en la práctica las cuestiones relativas a la seguridad, el impacto social y la preservación del medio ambiente.
           </p>
         </div>
         <h2 className="mt-8 text-2xl font-semibold">Objetivos del Proyecto</h2>
@@ -300,85 +300,97 @@ export default function DocumentoPage() {
         <h3 className="mt-8 text-xl font-semibold">10. Perfil del egresado/egresada</h3>
         <div className="mt-4 space-y-4 text-justify leading-relaxed">
           <p>
-            El/La Ingeniero/a en Informática egresado/a de la Universidad Nacional de Catamarca es un profesional con sólida formación científica, técnica, profesional y de gestión, habilitado para concebir, diseñar, desarrollar y liderar soluciones tecnológicas integrales en contextos organizacionales complejos.
+            El/La Ingeniero/a en Informática egresado/a de la Universidad Nacional de Catamarca es un profesional con una sólida formación científica, técnica, profesional y de gestión. Está habilitado para concebir, diseñar, desarrollar y liderar soluciones tecnológicas integrales en contextos organizacionales complejos.
           </p>
           <p>
             Su perfil híbrido le permite articular conocimiento profundo en las áreas técnicas de la informática con una visión estratégica y de negocios sobre las organizaciones, basada en el conocimiento adquirido en los bloques curriculares.
           </p>
           <p>
-            Este profesional posee una actitud ética, crítica y creativa para la identificación y resolución de problemas de forma sistémica y holística, considerando aspectos políticos, económicos, sociales, ambientales y culturales desde una perspectiva global.
+            Este profesional posee una actitud ética, crítica y creativa para la identificación y resolución de problemas de forma sistémica y holística, considerando aspectos políticos, económicos, sociales, ambientales y culturales desde una perspectiva global, tomando en cuenta las necesidades de la sociedad y garantizando el desarrollo sostenible.
           </p>
           <p>
-            El Perfil del egresado/a se define explícitamente sobre la base del Proyecto Institucional y garantiza el desarrollo del conjunto de competencias genéricas y específicas exigidas por los estándares nacionales y regionales.
+            El perfil del egresado/a se define explícitamente sobre la base del Proyecto Institucional y garantiza el desarrollo del conjunto de competencias genéricas y específicas exigidas por los estándares nacionales (Resolución Ministerial N.º 1557/2021 y modificatorias) y los estándares regionales ARCUSUR.
           </p>
           <p>El/La Ingeniero/a en Informática está capacitado/a para:</p>
           <ol className="list-decimal space-y-2 pl-6">
-            <li>Liderar la Transformación Digital, asumiendo roles de liderazgo y dirección en el ciclo de vida de sistemas de información, software y comunicaciones.</li>
-            <li>Emprender y gestionar soluciones tecnológicas innovadoras, dirigir equipos multidisciplinarios y crear empresas de base tecnológica.</li>
-            <li>Actuar con Responsabilidad Social con compromiso ético y ambiental, garantizando que su intervención no comprometa el interés público ni el desarrollo sostenible.</li>
-            <li>Demostrar capacidad de aprendizaje continuo y autónomo, adaptándose a la evolución de las tecnologías.</li>
-            <li>Ejercer las Actividades Profesionales Reservadas al título conforme a normativa vigente.</li>
+            <li>Liderar la Transformación Digital: Asume roles de liderazgo y dirección en la concepción, diseño, desarrollo, implementación, operación y mantenimiento de sistemas de información, software y comunicaciones en diversos entornos.</li>
+            <li>Emprender y gestionar: Genera soluciones tecnológicas innovadoras, dirige equipos multidisciplinarios de manera efectiva, y está preparado para crear y gestionar empresas de base tecnológica y en la innovación en el medio socio-productivo.</li>
+            <li>Actuar con Responsabilidad Social: Posee un compromiso ético y responsabilidad social, considerando el impacto político, económico, social y ambiental de su actividad, garantizando que su intervención no comprometa el interés público ni el desarrollo sostenible.</li>
+            <li>Demostrar capacidad de aprendizaje continuo y autónomo, adaptándose rápidamente a la evolución de las tecnologías.</li>
+            <li>Ejercer las Actividades Profesionales Reservadas (AARR) al título conforme a la Resolución Ministerial N.º 1254/2018 — Anexo XXXII, incluyendo especificar, proyectar, desarrollar, dirigir, controlar, establecer métricas de calidad y certificar sistemas de información y software.</li>
           </ol>
         </div>
 
         <h3 className="mt-8 text-xl font-semibold">11. Alcance del Título: Ingeniero/a en Informática</h3>
         <div className="mt-4 space-y-4 text-justify leading-relaxed">
           <p>
-            De acuerdo con el Artículo 43 de la Ley de Educación Superior, la Ingeniería en Informática implica Actividades Profesionales Reservadas (AARR). El egresado/a tendrá competencia para desarrollar las siguientes actividades profesionales:
+            De acuerdo con lo establecido en el Artículo 43 de la Ley de Educación Superior, la Ingeniería en Informática es una carrera que implica Actividades Profesionales Reservadas (AARR). En consecuencia, el egresado de esta carrera tendrá competencia para desarrollar las siguientes actividades profesionales, en virtud de la formación adquirida en el presente plan de estudios:
           </p>
           <div className="mt-2 font-semibold">a) Actividades Profesionales Reservadas</div>
           <ol className="list-decimal space-y-2 pl-6">
             <li>Especificar, proyectar y desarrollar sistemas de información, sistemas de comunicación de datos y software cuya utilización pueda afectar la seguridad, salud, bienes o derechos.</li>
             <li>Proyectar y dirigir lo referido a seguridad informática.</li>
             <li>Establecer métricas y normas de calidad de software.</li>
-            <li>Certificar el funcionamiento, condición de uso o estado de sistemas de información, sistemas de comunicación de datos y software.</li>
-            <li>Dirigir y controlar la implementación, operación y mantenimiento de sistemas de información, sistemas de comunicación de datos y software.</li>
+            <li>Certificar el funcionamiento, condición de uso o estado de sistemas de información, sistemas de comunicación de datos y software, cuya utilización pueda afectar la seguridad, salud, bienes o derechos.</li>
+            <li>Dirigir y controlar la implementación, operación y mantenimiento de sistemas de información, sistemas de comunicación de datos y software, cuya utilización pueda afectar la seguridad, salud, bienes o derechos.</li>
           </ol>
           <div className="mt-4 font-semibold">b) Alcances Profesionales Adicionales (no reservados - AL)</div>
           <ol className="list-decimal space-y-2 pl-6" start={6}>
-            <li>Planificar, dirigir y gestionar la infraestructura tecnológica y de comunicaciones.</li>
-            <li>Auditar y evaluar sistemas informáticos, procesos de TI y estructuras de ciberseguridad.</li>
-            <li>Formular, implementar y controlar planes de gestión de riesgos de TI y continuidad operativa.</li>
-            <li>Diseñar, implementar y gestionar bases de datos complejas, incluyendo tecnologías NoSQL y Big Data.</li>
-            <li>Liderar y desempeñarse en equipos multidisciplinarios para proyectos de ingeniería.</li>
+            <li>Planificar, dirigir y gestionar la infraestructura tecnológica y de comunicaciones para la operación y soporte de sistemas de información.</li>
+            <li>Auditar y evaluar sistemas informáticos, procesos de TI y estructuras de ciberseguridad, asegurando el cumplimiento de normas y estándares nacionales e internacionales.</li>
+            <li>Formular, implementar y controlar planes de gestión de riesgos de tecnología de la información (TI) y planes de continuidad operativa.</li>
+            <li>Diseñar, implementar y gestionar bases de datos complejas, incluyendo bases de datos distribuidas y tecnologías NoSQL, para la administración de grandes volúmenes de información (Big Data).</li>
+            <li>Liderar y desempeñarse de manera efectiva en equipos de trabajo multidisciplinarios para el desarrollo de proyectos de ingeniería, utilizando metodologías ágiles.</li>
             <li>Especificar, proyectar, desarrollar e implementar modelos de simulación y sistemas con inteligencia artificial.</li>
-            <li>Definir y evaluar asuntos de ingeniería legal, económica y financiera, incluyendo formulación y evaluación de proyectos.</li>
-            <li>Evaluar el impacto ético, legal y social de soluciones informáticas, actuando con responsabilidad profesional y compromiso social.</li>
+            <li>Definir y evaluar asuntos de ingeniería legal, económica y financiera, incluyendo la formulación y evaluación de proyectos y planes de negocio, y el control del impacto ambiental en el contexto de las TIC.</li>
+            <li>Evaluar el impacto ético, legal y social de las soluciones informáticas, y actuar con responsabilidad profesional y compromiso social, en coherencia con el desarrollo sostenible.</li>
           </ol>
         </div>
 
         <h3 className="mt-8 text-xl font-semibold">12. Requisitos de ingreso</h3>
         <div className="mt-4 space-y-4 text-justify leading-relaxed">
           <p>
-            Para ingresar a la carrera, el/la aspirante deberá cumplir condiciones establecidas por la normativa institucional vigente.
+            Para ingresar a la carrera, el/la aspirante deberá cumplir con alguna de las siguientes condiciones: a) Poseer título de nivel secundario completo, conforme a lo establecido por la Ley de Educación Superior N.º 24.521; b) Tener más de 25 años y no haber completado el nivel secundario, pero acreditar preparación y/o experiencia laboral acorde con la carrera, en el marco del artículo 7 de la Ley de Educación Superior N.º 24.521.
+          </p>
+          <p>
+            Asimismo, los requisitos de ingreso están regulados institucionalmente por las siguientes normativas:
           </p>
           <ul className="list-disc space-y-2 pl-6">
-            <li>Ordenanza CD Nº 004/2005 y su modificatoria 002/2007.</li>
-            <li>Ordenanza CD Nº 010/2024 sobre Curso de Nivelación para el Ingreso.</li>
+            <li>Ordenanza CD N.º 004/2005 y su modificatoria 002/2007, que establecen las condiciones generales de ingreso a las carreras de la Facultad de Tecnología y Ciencias Aplicadas.</li>
+            <li>Ordenanza CD N.º 010/2024, que aprueba la implementación del Curso de Nivelación para el Ingreso a carreras de Ingeniería, Licenciaturas y Tecnicaturas.</li>
           </ul>
           <p>
-            El ingreso contempla acciones de acompañamiento y tutoría a estudiantes de primer año, orientadas a facilitar la inserción en la vida universitaria y la trayectoria académica.
+            A su vez, el ingreso a la carrera contempla acciones de acompañamiento y tutoría a los estudiantes de primer año, orientadas a facilitar la inserción en la vida universitaria y el desarrollo de competencias fundamentales para la trayectoria académica. Estas actividades se articulan con las políticas institucionales de retención y mejora de la permanencia estudiantil, coordinadas por el equipo de tutorías de la Facultad.
           </p>
         </div>
 
         <h3 className="mt-8 text-xl font-semibold">13. Estructura del Plan de estudios</h3>
         <div className="mt-4 space-y-4 text-justify leading-relaxed">
           <p>
-            La carrera tiene una duración prevista de cinco (5) años, con 3970 horas reloj, diseñada según la Resolución Nº 1557/2021 de la Secretaría de Educación y sus modificatorias.
+            La carrera de Ingeniería en Informática tiene una duración prevista de cinco (5) años, con una carga horaria total de 3970 horas reloj. El Plan de Estudios ha sido diseñado conforme a lo establecido en la Resolución N° 1557/2021 de la Secretaría de Educación y sus modificatorias, que fijan los contenidos curriculares básicos, los bloques de conocimiento, la intensidad de la formación práctica, y las actividades reservadas al título que deben ser cumplimentadas obligatoriamente por todas las carreras que aspiren al reconocimiento oficial y validez nacional del título.
           </p>
           <p>
-            La propuesta se estructura en módulos y bloques formativos, con asignaturas cuatrimestrales y anuales, promoviendo la adquisición gradual y progresiva de conocimientos y competencias, y asegurando la intensidad de la formación práctica.
+            La propuesta académica se estructura en módulos y bloques formativos, organizados en asignaturas cuatrimestrales y anuales, con un sistema de correlatividades que promueve la adquisición gradual y progresiva de conocimientos y competencias. Esta estructura permite garantizar un trayecto formativo coherente, articulado y flexible, en consonancia con los estándares nacionales del CONFEDI y los criterios regionales del sistema ARCUSUR.
           </p>
           <p>
-            El diseño curricular detallado en los ANEXOS I a VI cumple con requisitos de carga horaria, distribución por bloques, contenidos mínimos e intensidad de formación práctica, e incluye régimen de transición y equivalencias.
+            La distribución horaria resultante expresa una orientación formativa que combina fundamentos sólidos en ciencias básicas y tecnologías esenciales, junto con un enfoque profesionalizante alineado con las necesidades de desempeño del Ingeniero en Informática en el contexto regional y nacional. El mayor peso relativo del bloque de Tecnologías Aplicadas, por encima del rango observado en planes tradicionales de ingeniería, responde a una construcción curricular deliberada que prioriza la formación práctica y la integración temprana de los estudiantes en proyectos reales mediante actividades de desarrollo de software, sistemas de comunicación de datos y diseño e implementación de soluciones TIC. Esta orientación es coherente con los Alcances Profesionales Adicionales y con los requerimientos de la industria del software, sector estratégico para la provincia y la región.
+          </p>
+          <p>
+            El diseño curricular que se detalla en los ANEXOS I y II da cumplimiento a los requisitos de carga horaria, distribución por bloques de conocimiento, y contenido mínimo establecido por la normativa vigente. La intensidad de la formación práctica, desarrollada tanto en asignaturas específicas como de manera transversal, se encuentra detallada en el ANEXO III, en concordancia con lo estipulado en el ANEXO III de la Resolución N.º 1557/2021.
+          </p>
+          <p>
+            Los contenidos mínimos de cada asignatura, tanto obligatoria como optativa, se presentan en el ANEXO IV – Programas Sintéticos. En el ANEXO V se incluye la oferta inicial de asignaturas optativas, enmarcadas en los bloques de Tecnologías Básicas y Tecnologías Aplicadas, las cuales podrán ser actualizadas según la evolución disciplinar y la disponibilidad académica.
+          </p>
+          <p>
+            El ANEXO VI contempla el Régimen de Transición y Equivalencias, el cual resulta indispensable para la implementación del nuevo Plan de Estudios. Este régimen será de aplicación obligatoria para todos los estudiantes inscriptos bajo el Plan de Estudios anterior (Ordenanza CS N.º 004/2011) que, a la fecha de entrada en vigencia del nuevo plan, no hubieren completado la totalidad de los requisitos curriculares para la obtención del título.
           </p>
           <h4 className="mt-4 text-xl font-semibold italic">13.1 Trayectos formativos especiales</h4>
           <ul className="mt-2 space-y-3 pl-6">
             <li>
-              <span className="font-semibold">PPS – Práctica Profesional Supervisada (200 h):</span> diseñada para integrar saberes en situaciones reales de ejercicio profesional, en articulación con el medio socio-productivo.
+              <span className="font-semibold">PPS – Práctica Profesional Supervisada (200 h):</span> diseñada para que los estudiantes integren sus saberes en situaciones reales de ejercicio profesional, en articulación con el medio socio-productivo. Forma parte del bloque de Integración. (Reglamento de Práctica profesional supervisada Ord. CD FTyCA 002/2013)
             </li>
             <li>
-              <span className="font-semibold">Trabajo Final de Ingeniería (200 h):</span> proyecto integrador individual o grupal que evidencia competencias adquiridas, articulando conocimientos de diversas áreas.
+              <span className="font-semibold">Trabajo Final de Ingeniería (200 h):</span> proyecto integrador individual o grupal que permite demostrar el dominio de competencias adquiridas, articulando conocimientos de diversas áreas. Se enmarca en el bloque de Integración. (Reglamento General de Trabajo Final, para las carreras de la Facultad de Tecnología y Ciencias Aplicadas Ord. CD FTyCA 008/2015)
             </li>
           </ul>
           <h4 className="mt-4 text-xl font-semibold italic">13.2 Materias Optativas</h4>
