@@ -327,6 +327,7 @@ export default function DocumentoPage() {
             De acuerdo con lo establecido en el Artículo 43 de la Ley de Educación Superior, la Ingeniería en Informática es una carrera que implica Actividades Profesionales Reservadas (AARR). En consecuencia, el egresado de esta carrera tendrá competencia para desarrollar las siguientes actividades profesionales, en virtud de la formación adquirida en el presente plan de estudios:
           </p>
           <div className="mt-2 font-semibold">a) Actividades Profesionales Reservadas</div>
+          <p>El Ingeniero/a en Informática egresado/a de la UNCA se encuentra habilitado/a para desempeñarse profesionalmente en las siguientes actividades (Conforme a la Resolución Ministerial N.º 1254/2018 – Anexo XXXII):</p>
           <ol className="list-decimal space-y-2 pl-6">
             <li>Especificar, proyectar y desarrollar sistemas de información, sistemas de comunicación de datos y software cuya utilización pueda afectar la seguridad, salud, bienes o derechos.</li>
             <li>Proyectar y dirigir lo referido a seguridad informática.</li>
@@ -335,6 +336,7 @@ export default function DocumentoPage() {
             <li>Dirigir y controlar la implementación, operación y mantenimiento de sistemas de información, sistemas de comunicación de datos y software, cuya utilización pueda afectar la seguridad, salud, bienes o derechos.</li>
           </ol>
           <div className="mt-4 font-semibold">b) Alcances Profesionales Adicionales (no reservados - AL)</div>
+          <p>(Actividades de habilitación profesional que extienden el Perfil de Egreso y recuperan competencias específicas y transversales):</p>
           <ol className="list-decimal space-y-2 pl-6" start={6}>
             <li>Planificar, dirigir y gestionar la infraestructura tecnológica y de comunicaciones para la operación y soporte de sistemas de información.</li>
             <li>Auditar y evaluar sistemas informáticos, procesos de TI y estructuras de ciberseguridad, asegurando el cumplimiento de normas y estándares nacionales e internacionales.</li>
@@ -385,6 +387,7 @@ export default function DocumentoPage() {
             El ANEXO VI contempla el Régimen de Transición y Equivalencias, el cual resulta indispensable para la implementación del nuevo Plan de Estudios. Este régimen será de aplicación obligatoria para todos los estudiantes inscriptos bajo el Plan de Estudios anterior (Ordenanza CS N.º 004/2011) que, a la fecha de entrada en vigencia del nuevo plan, no hubieren completado la totalidad de los requisitos curriculares para la obtención del título.
           </p>
           <h4 className="mt-4 text-xl font-semibold italic">13.1 Trayectos formativos especiales</h4>
+          <p>Además de las asignaturas obligatorias, la estructura contempla los siguientes trayectos formativos:</p>
           <ul className="mt-2 space-y-3 pl-6">
             <li>
               <span className="font-semibold">PPS – Práctica Profesional Supervisada (200 h):</span> diseñada para que los estudiantes integren sus saberes en situaciones reales de ejercicio profesional, en articulación con el medio socio-productivo. Forma parte del bloque de Integración. (Reglamento de Práctica profesional supervisada Ord. CD FTyCA 002/2013)
